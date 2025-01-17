@@ -1,0 +1,29 @@
+#!/bin/sh
+cmd=`realpath $0`
+_DIR=`dirname $cmd`
+
+. /configs/function_set
+
+cd /lib/modules
+
+__insmod()
+{
+	if [ -f "$1" ];then
+		insmod $@
+	fi
+}
+
+case $1 in
+    start)
+		if [ "${ENABLE_WLAN}" = "1" ]; then
+			__insmod /lib/modules/ssv6x5x.ko
+			__insmod /lib/modules/ATBM606x_wifi_sdio.ko
+		fi
+        ;;
+    stop)
+        sync
+        ;;
+    *)
+        exit 1
+        ;;
+esac

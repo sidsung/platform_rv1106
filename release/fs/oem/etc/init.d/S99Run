@@ -2,10 +2,11 @@
 cmd=`realpath $0`
 _DIR=`dirname $cmd`
 
+. /configs/function_set
+
 case $1 in
     start)
-        # cd /userdata
-        # ./00_myipc &
+        [ "${RUN_RTSP_PUSH}" = "1" ] && /oem/bin/10_rtsp_push &
         ;;
     stop)
         sync

@@ -1,19 +1,14 @@
 #!/bin/sh
 
-ENABLE_ETH=1
-ENABLE_WLAN=0
+. /configs/function_set
 
 function interface_up()
 {
     ifconfig eth0 down >& /dev/null
     ifconfig wlan0 down >& /dev/null
 
-    if [ ${ENABLE_ETH} = 1 ]; then
+    if [ "${ENABLE_ETH}" = "1" ]; then
         ifconfig eth0 up
-    fi
-    if [ ${ENABLE_WLAN} = 1 ]; then
-        [ -f /lib/modules/ssv6x5x.ko ] && insmod /lib/modules/ssv6x5x.ko
-        [ -f /lib/modules/ATBM606x_wifi_sdio.ko ] && insmod /lib/modules/ATBM606x_wifi_sdio.ko
     fi
 }
 
@@ -23,20 +18,20 @@ function connect_net()
     changes_cur=0
 
     killall udhcpc >& /dev/null
-    killall wpa_supplicant >& /dev/null
 
-    if [ ${ENABLE_WLAN} = 1 ]; then
+    if [ "${ENABLE_WLAN}" = "1" ]; then
+        killall wpa_supplicant >& /dev/null
         wlan_path='/sys/class/net/wlan0/carrier'
         if [ -f $wlan_path ]; then
             ifconfig wlan0 up
-            wpa_supplicant -D nl80211 -iwlan0 -c /etc/wpa_supplicant.conf -B &
+            wpa_supplicant -D nl80211 -iwlan0 -c /configs/wpa_supplicant.conf -B &
             udhcpc -i wlan0 -R &
         fi
     fi
 
     while :
     do
-        if [ ${ENABLE_ETH} = 1 ]; then
+        if [ "${ENABLE_ETH}" = "1" ]; then
             changes_cur=`cat /sys/class/net/eth0/carrier_changes`
             if [ $changes_cur != $changes_old ]; then
                 changes_old=$changes_cur
@@ -60,7 +55,7 @@ function connect_net()
 
 network_init()
 {
-    if [ ${ENABLE_ETH} = 1 ]; then
+    if [ "${ENABLE_ETH}" = "1" ]; then
         if [ ! -f /sys/class/net/eth0/carrier ]; then
             echo "eth0 not exist"
             exit 1

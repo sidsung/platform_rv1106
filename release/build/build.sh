@@ -340,6 +340,17 @@ function build_kernelconfig() {
     finish_build
 }
 
+function build_driver() {
+    start_build
+    cd ${SDK_SYSDRV_DIR}/drv_ko/wifi/L.SWB.20Q2.2220.01_3314
+
+    make -C ${SDK_SYSDRV_DIR}/drv_ko/wifi/L.SWB.20Q2.2220.01_3314 KERNEL_OBJ_PATH=${KERNEL_DIR} SSV_DRV_PATH=${SDK_SYSDRV_DIR}/drv_ko/wifi/L.SWB.20Q2.2220.01_3314 ARCH=arm CROSS_COMPILE=${CROSS_COMPILE} modules -j$(nproc)
+
+    if [ $? -ne 0 ]; then exit 1; fi
+    find -name "*.ko" | xargs cp -t ${RELEASE_DIR}/fs/overlay/lib/modules/
+    finish_build
+}
+
 function build_env() {
     start_build
     MKENVIMAGE=${SDK_SYSDRV_DIR}/tools/pc/uboot_tools/mkenvimage
@@ -399,6 +410,9 @@ while [ $# -ne 0 ]; do
     buildrootconfig) option=build_buildrootconfig ;;
     env) option=build_env ;;
     release) option=build_release ;;
+    driver)
+        option=build_driver
+        ;;
     *)
         echo "parame error"
         exit 0

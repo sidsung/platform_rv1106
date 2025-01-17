@@ -66,6 +66,20 @@
 		regulator-boot-on;
 	};
 
+	sdio_pwrseq: sdio-pwrseq {
+		compatible = "mmc-pwrseq-simple";
+		pinctrl-names = "default";
+		pinctrl-0 = <&wifi_enable_h>;
+		post-power-on-delay-ms = <300>;
+		reset-gpios = <&gpio1 RK_PA0 GPIO_ACTIVE_LOW>;
+	};
+
+	wireless_wlan: wireless-wlan {
+		compatible = "wlan-platdata";
+		pinctrl-names = "default";
+		status = "okay";
+	};
+
 	restart-poweroff {
 		compatible = "restart-poweroff";
 	};
@@ -401,10 +415,16 @@
 		};
 	};
 
+	sdio-pwrseq {
+		wifi_enable_h: wifi-enable-h {
+			rockchip,pins = <1 RK_PA0 RK_FUNC_GPIO &pcfg_pull_none>;
+		};
+	};
+
     gpio1-pc7 {
         gpio1_pc7:gpio1-pc7 {
             rockchip,pins = <1 RK_PC7 RK_FUNC_GPIO &pcfg_pull_none>;
-    };
+    	};
 	};
 };
 
@@ -418,6 +438,20 @@
 	rockchip,default-sample-phase = <90>;
 	no-sdio;
 	no-sd;
+	status = "okay";
+};
+
+&sdio {
+	max-frequency = <24000000>;
+	no-sd;
+	no-mmc;
+	bus-width = <4>;
+	cap-sd-highspeed;
+	cap-sdio-irq;
+	mmc-pwrseq = <&sdio_pwrseq>;
+	non-removable;
+	pinctrl-names = "default";
+	pinctrl-0 = <&sdmmc1m0_cmd &sdmmc1m0_clk &sdmmc1m0_bus4>;
 	status = "okay";
 };
 

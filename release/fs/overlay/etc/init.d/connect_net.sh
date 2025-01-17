@@ -12,7 +12,8 @@ function interface_up()
         ifconfig eth0 up
     fi
     if [ ${ENABLE_WLAN} = 1 ]; then
-        insmod /lib/modules/ATBM606x_wifi_sdio.ko
+        [ -f /lib/modules/ssv6x5x.ko ] && insmod /lib/modules/ssv6x5x.ko
+        [ -f /lib/modules/ATBM606x_wifi_sdio.ko ] && insmod /lib/modules/ATBM606x_wifi_sdio.ko
     fi
 }
 

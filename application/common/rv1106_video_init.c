@@ -36,7 +36,6 @@ int rv1106_video_init(rv1106_video_init_param_t *video_param)
     printf("#CameraIdx: %d\n", video_param->vi_dev[0].ViDevId);
     printf("#IQ Path: %s\n", video_param->isp[0].iq_file_dir);
 
-
     if (video_param->isp[0].enable) {
         s32Ret = RV1106_ISP_init(&video_param->isp[0]);
         if (s32Ret != RK_SUCCESS) {

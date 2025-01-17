@@ -206,6 +206,7 @@ uint32_t drm_buf_get_phy(int handle) {
     return phys_arg.phy_addr;
 }
 
+#if 0
 __attribute__((constructor)) static int load_drm() {
     drm_fd =  drm_init();
 
@@ -242,6 +243,7 @@ __attribute__((destructor)) static void unload_drm() {
     drm_deinit(drm_fd);
     drm_fd = -1;
 }
+#endif
 
 #if 0
 int main_(){
@@ -274,4 +276,3 @@ int main_(){
 }
 #endif
 #endif
-

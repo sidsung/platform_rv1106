@@ -44,7 +44,7 @@ int rv1106_venc_init(video_venc_param_t *venc)
 
     do {
         stAttr.stRcAttr.enRcMode = VENC_RC_MODE_H264CBR;
-        stAttr.stRcAttr.stH264Cbr.u32BitRate = 100 * 1024;
+        stAttr.stRcAttr.stH264Cbr.u32BitRate = 1024;
         stAttr.stRcAttr.stH264Cbr.u32Gop = 60;
 
         stAttr.stVencAttr.enType = venc->enType;

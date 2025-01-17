@@ -15,7 +15,7 @@
 	compatible = "rockchip,rv1103g-38x38-ipc-v10", "rockchip,rv1106g3";
 
 	chosen {
-		bootargs = "earlycon=uart8250,mmio32,0xff4c0000 console=ttyFIQ0 rootwait snd_soc_core.prealloc_buffer_size_kbytes=16 coherent_pool=0 rk_dma_heap_cma=40M";
+		bootargs = "earlycon=uart8250,mmio32,0xff4c0000 console=ttyFIQ0 rootwait snd_soc_core.prealloc_buffer_size_kbytes=16 coherent_pool=0 rk_dma_heap_cma=60M";
 	};
 
 	backlight: backlight {

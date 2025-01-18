@@ -21,6 +21,9 @@ typedef struct {
     RK_BOOL bMirror;
     RK_BOOL bFlip;
 
+    RK_U32 bufCount;
+    RK_U32 Depth;
+
     RK_BOOL Crop;
     int X;
     int Y;

@@ -69,24 +69,28 @@ void init_video_param_list(void)
     g_video_param_list_ctx.vi_chn[0].enable = 1;
     g_video_param_list_ctx.vi_chn[0].ViPipe = 0;
     g_video_param_list_ctx.vi_chn[0].viChnId = 0;
-    g_video_param_list_ctx.vi_chn[0].width = g_sensor_raw_width;
-    g_video_param_list_ctx.vi_chn[0].height = g_sensor_raw_height;
+    g_video_param_list_ctx.vi_chn[0].height = 1080;
+    g_video_param_list_ctx.vi_chn[0].width = g_video_param_list_ctx.vi_chn[0].height * g_sensor_raw_width / g_sensor_raw_height;
     g_video_param_list_ctx.vi_chn[0].SrcFrameRate = -1;
     g_video_param_list_ctx.vi_chn[0].DstFrameRate = -1;
     g_video_param_list_ctx.vi_chn[0].PixelFormat = RK_FMT_YUV420SP;
     g_video_param_list_ctx.vi_chn[0].bMirror = RK_FALSE;
     g_video_param_list_ctx.vi_chn[0].bFlip = RK_FALSE;
+    g_video_param_list_ctx.vi_chn[0].bufCount = 2;
+    g_video_param_list_ctx.vi_chn[0].Depth = 0;
 
     g_video_param_list_ctx.vi_chn[1].enable = 0;
     g_video_param_list_ctx.vi_chn[1].ViPipe = 0;
     g_video_param_list_ctx.vi_chn[1].viChnId = 1;
-    g_video_param_list_ctx.vi_chn[1].width = 864;
-    g_video_param_list_ctx.vi_chn[1].height = 486;
+    g_video_param_list_ctx.vi_chn[1].width = 1280;
+    g_video_param_list_ctx.vi_chn[1].height = 720;
     g_video_param_list_ctx.vi_chn[1].SrcFrameRate = -1;
     g_video_param_list_ctx.vi_chn[1].DstFrameRate = -1;
     g_video_param_list_ctx.vi_chn[1].PixelFormat = RK_FMT_YUV420SP;
     g_video_param_list_ctx.vi_chn[1].bMirror = RK_FALSE;
     g_video_param_list_ctx.vi_chn[1].bFlip = RK_FALSE;
+    g_video_param_list_ctx.vi_chn[1].bufCount = 2;
+    g_video_param_list_ctx.vi_chn[1].Depth = 0;
 
     g_video_param_list_ctx.vi_chn[2].enable = 0;
     g_video_param_list_ctx.vi_chn[2].ViPipe = 0;
@@ -98,16 +102,67 @@ void init_video_param_list(void)
     g_video_param_list_ctx.vi_chn[2].PixelFormat = RK_FMT_YUV420SP;
     g_video_param_list_ctx.vi_chn[2].bMirror = RK_FALSE;
     g_video_param_list_ctx.vi_chn[2].bFlip = RK_FALSE;
+    g_video_param_list_ctx.vi_chn[1].bufCount = 3;
+    g_video_param_list_ctx.vi_chn[1].Depth = 1;
+
+    g_video_param_list_ctx.vpss[0].enable = 0;
+    g_video_param_list_ctx.vpss[0].VpssGrpID = 0;
+    g_video_param_list_ctx.vpss[0].inWidth = g_sensor_raw_width;
+    g_video_param_list_ctx.vpss[0].inHeight = g_sensor_raw_height;
+    g_video_param_list_ctx.vpss[0].inPixelFormat = RK_FMT_YUV420SP;
+    g_video_param_list_ctx.vpss[0].bindSrcChn.enModId = RK_ID_VI;
+    g_video_param_list_ctx.vpss[0].bindSrcChn.s32DevId = 0;
+    g_video_param_list_ctx.vpss[0].bindSrcChn.s32ChnId = 0;
+
+    g_video_param_list_ctx.vpss[0].chn[0].enable = 0;
+    g_video_param_list_ctx.vpss[0].chn[0].VpssChnID = 0;
+    g_video_param_list_ctx.vpss[0].chn[0].outWidth = g_sensor_raw_width;
+    g_video_param_list_ctx.vpss[0].chn[0].outHeight = g_sensor_raw_height;
+    g_video_param_list_ctx.vpss[0].chn[0].SrcFrameRate = -1;
+    g_video_param_list_ctx.vpss[0].chn[0].DstFrameRate = -1;
+    g_video_param_list_ctx.vpss[0].chn[0].outPixelFormat = RK_FMT_YUV420SP;
+    g_video_param_list_ctx.vpss[0].chn[0].bMirror = RK_FALSE;
+    g_video_param_list_ctx.vpss[0].chn[0].bFlip = RK_FALSE;
+    g_video_param_list_ctx.vpss[0].chn[0].bufCount = 2;
+    g_video_param_list_ctx.vpss[0].chn[0].Depth = 0;
+
+    g_video_param_list_ctx.vpss[0].chn[1].enable = 1;
+    g_video_param_list_ctx.vpss[0].chn[1].VpssChnID = 1;
+    g_video_param_list_ctx.vpss[0].chn[1].outWidth = 1280;
+    g_video_param_list_ctx.vpss[0].chn[1].outHeight = 720;
+    g_video_param_list_ctx.vpss[0].chn[1].SrcFrameRate = -1;
+    g_video_param_list_ctx.vpss[0].chn[1].DstFrameRate = -1;
+    g_video_param_list_ctx.vpss[0].chn[1].outPixelFormat = RK_FMT_YUV420SP;
+    g_video_param_list_ctx.vpss[0].chn[1].bMirror = RK_FALSE;
+    g_video_param_list_ctx.vpss[0].chn[1].bFlip = RK_FALSE;
+    g_video_param_list_ctx.vpss[0].chn[1].bufCount = 2;
+    g_video_param_list_ctx.vpss[0].chn[1].Depth = 0;
 
     g_video_param_list_ctx.venc[0].enable = 1;
-    g_video_param_list_ctx.venc[0].enType = RK_VIDEO_ID_AVC;
     g_video_param_list_ctx.venc[0].vencChnId = 0;
-    g_video_param_list_ctx.venc[0].width = g_sensor_raw_width;
-    g_video_param_list_ctx.venc[0].height = g_sensor_raw_height;
+    g_video_param_list_ctx.venc[0].enType = RK_VIDEO_ID_AVC;
+    g_video_param_list_ctx.venc[0].bitRate = 2 * 1024;
+    g_video_param_list_ctx.venc[0].height = 1080;
+    g_video_param_list_ctx.venc[0].width = g_video_param_list_ctx.venc[0].height * g_sensor_raw_width / g_sensor_raw_height;
+    g_video_param_list_ctx.venc[0].bufSize = g_video_param_list_ctx.venc[0].width * g_video_param_list_ctx.venc[0].width / 2;
+    g_video_param_list_ctx.venc[0].bufCount = 1;
     g_video_param_list_ctx.venc[0].PixelFormat = RK_FMT_YUV420SP;
     g_video_param_list_ctx.venc[0].bindSrcChn.enModId = RK_ID_VI;
     g_video_param_list_ctx.venc[0].bindSrcChn.s32DevId = 0;
     g_video_param_list_ctx.venc[0].bindSrcChn.s32ChnId = 0;
+
+    g_video_param_list_ctx.venc[1].enable = 0;
+    g_video_param_list_ctx.venc[1].vencChnId = 1;
+    g_video_param_list_ctx.venc[1].enType = RK_VIDEO_ID_AVC;
+    g_video_param_list_ctx.venc[1].bitRate = 2 * 1024;
+    g_video_param_list_ctx.venc[1].height = 720;
+    g_video_param_list_ctx.venc[1].width = g_video_param_list_ctx.venc[0].height * g_sensor_raw_width / g_sensor_raw_height;
+    g_video_param_list_ctx.venc[1].bufSize = g_video_param_list_ctx.venc[1].width * g_video_param_list_ctx.venc[1].width / 2;
+    g_video_param_list_ctx.venc[1].bufCount = 1;
+    g_video_param_list_ctx.venc[1].PixelFormat = RK_FMT_YUV420SP;
+    g_video_param_list_ctx.venc[1].bindSrcChn.enModId = RK_ID_VPSS;
+    g_video_param_list_ctx.venc[1].bindSrcChn.s32DevId = 0;
+    g_video_param_list_ctx.venc[1].bindSrcChn.s32ChnId = 1;
 
     g_video_param_list_ctx.rgn[0].enable = 0;
     g_video_param_list_ctx.rgn[0].rgnHandle = 0;
@@ -131,36 +186,6 @@ void init_video_param_list(void)
     g_video_param_list_ctx.iva[0].height = 324;
     g_video_param_list_ctx.iva[0].IvaPixelFormat = ROCKIVA_IMAGE_FORMAT_YUV420SP_NV12;
     // g_video_param_list_ctx.iva[0].result_cb = rv1106_iva_result_cb;
-
-
-    // g_video_param_list_ctx.vpss[0].enable = 0;
-    // g_video_param_list_ctx.vpss[0].VpssGrpID = 0;
-    // g_video_param_list_ctx.vpss[0].inWidth = g_sensor_raw_width;
-    // g_video_param_list_ctx.vpss[0].inHeight = g_sensor_raw_height;
-    // g_video_param_list_ctx.vpss[0].inPixelFormat = RK_FMT_YUV420SP;
-    // g_video_param_list_ctx.vpss[0].bindSrcChn.enModId = RK_ID_VI;
-    // g_video_param_list_ctx.vpss[0].bindSrcChn.s32DevId = 0;
-    // g_video_param_list_ctx.vpss[0].bindSrcChn.s32ChnId = 0;
-
-    // g_video_param_list_ctx.vpss[0].chn[0].enable = 1;
-    // g_video_param_list_ctx.vpss[0].chn[0].VpssChnID = 0;
-    // g_video_param_list_ctx.vpss[0].chn[0].outWidth = 960;
-    // g_video_param_list_ctx.vpss[0].chn[0].outHeight = 540;
-    // g_video_param_list_ctx.vpss[0].chn[0].SrcFrameRate = 25;
-    // g_video_param_list_ctx.vpss[0].chn[0].DstFrameRate = 25;
-    // g_video_param_list_ctx.vpss[0].chn[0].outPixelFormat = RK_FMT_RGB888;
-    // g_video_param_list_ctx.vpss[0].chn[0].bMirror = RK_FALSE;
-    // g_video_param_list_ctx.vpss[0].chn[0].bFlip = RK_FALSE;
-
-    // g_video_param_list_ctx.vpss[0].chn[1].enable = 1;
-    // g_video_param_list_ctx.vpss[0].chn[1].VpssChnID = 1;
-    // g_video_param_list_ctx.vpss[0].chn[1].outWidth = g_sensor_raw_width;
-    // g_video_param_list_ctx.vpss[0].chn[1].outHeight = g_sensor_raw_height;
-    // g_video_param_list_ctx.vpss[0].chn[1].SrcFrameRate = 25;
-    // g_video_param_list_ctx.vpss[0].chn[1].DstFrameRate = 25;
-    // g_video_param_list_ctx.vpss[0].chn[1].outPixelFormat = RK_FMT_YUV420SP;
-    // g_video_param_list_ctx.vpss[0].chn[1].bMirror = RK_FALSE;
-    // g_video_param_list_ctx.vpss[0].chn[1].bFlip = RK_FALSE;
 
 }
 

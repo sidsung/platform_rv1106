@@ -11,7 +11,7 @@ extern "C" {
 typedef enum {
     GET_SCREEN_FRAME = 0,
     GET_VENC_FRAME,
-    GET_RTSP_FRAME,
+    GET_VENC2_FRAME,
     GET_IVA_FRAME,
 } get_frame_type_t;
 

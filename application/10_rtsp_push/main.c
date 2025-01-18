@@ -54,7 +54,7 @@ static void *venc_stream_thread(void *pArgs)
 {
     int video_ret = -1;
     frameInfo_vi_t fvi_info;
-    rtsp_session_handle rtsp_session;
+    rtsp_session_handle rtsp_session0;
     rtsp_demo_handle rtsplive = NULL;
 
     fvi_info.frame_data = malloc(1024 * 1024 * 8);
@@ -64,28 +64,28 @@ static void *venc_stream_thread(void *pArgs)
     }
 
     // init rtsp
-    const char* rtsp_path = "/live/0";
-    printf("[%s %d] create rtsp server: RTSP://IP:554/%s\n", __FILE__, __LINE__, rtsp_path);
+    const char* rtsp_path0 = "/live/0";
     rtsplive = create_rtsp_demo(554);
-    rtsp_session = rtsp_new_session(rtsplive, rtsp_path);
-    rtsp_set_video(rtsp_session, RTSP_CODEC_ID_VIDEO_H264, NULL, 0);
-    rtsp_sync_video_ts(rtsp_session, rtsp_get_reltime(), rtsp_get_ntptime());
+    printf("[%s %d] create rtsp server: RTSP://IP:554/%s\n", __func__, __LINE__, rtsp_path0);
+    rtsp_session0 = rtsp_new_session(rtsplive, rtsp_path0);
+
+    rtsp_set_video(rtsp_session0, RTSP_CODEC_ID_VIDEO_H264, NULL, 0);
+    rtsp_sync_video_ts(rtsp_session0, rtsp_get_reltime(), rtsp_get_ntptime());
 
     printf("[%s %d] Start VENC stream thread......\n", __FILE__, __LINE__);
     while (!thread_quit) {
         video_ret = video_GetFrame(GET_VENC_FRAME, &fvi_info, NULL);
         if (!video_ret) {
             // static uint64_t last_timestamp = 0;
-            // printf("RTSP ---> seq:%d w:%d h:%d fmt:%d size:%lld delay:%dms fps:%.1f\n", fvi_info.frame_seq, fvi_info.width, fvi_info.height, fvi_info.PixelFormat, fvi_info.frame_size, (uint32_t)(fvi_info.timestamp - last_timestamp) / 1000, (1000.0 / ((fvi_info.timestamp - last_timestamp) / 1000)));
+            // printf("VENC ---> seq:%d w:%d h:%d fmt:%d size:%lld delay:%dms fps:%.1f\n", fvi_info.frame_seq, fvi_info.width, fvi_info.height, fvi_info.PixelFormat, fvi_info.frame_size, (uint32_t)(fvi_info.timestamp - last_timestamp) / 1000, (1000.0 / ((fvi_info.timestamp - last_timestamp) / 1000)));
             // last_timestamp = fvi_info.timestamp;
 
-            rtsp_tx_video(rtsp_session, fvi_info.frame_data, fvi_info.frame_size,
+            rtsp_tx_video(rtsp_session0, fvi_info.frame_data, fvi_info.frame_size,
                             fvi_info.timestamp);
             rtsp_do_event(rtsplive);
-
             ;
         }
-        usleep(10 * 1000);
+        usleep(20 * 1000);
     }
 
     if (rtsplive)

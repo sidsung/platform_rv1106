@@ -2,6 +2,12 @@
 
 echo -e "\n>>>>>>>>>>>> Run Rootfs rcS <<<<<<<<<<<<\n"
 
+if [ -f /dev/reboot_flag ]; then
+	echo ">>> update boot.img reboot now"
+	reboot
+	exit 0
+fi
+
 chown root:root /var/empty
 chmod 700 /var/empty
 

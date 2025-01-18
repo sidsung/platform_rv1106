@@ -11,9 +11,6 @@ exec 0</dev/console
 exec 1>/dev/console
 exec 2>/dev/console
 
-# Mounting root file system
-root=$(awk -F'[ =]' '{ for(i=1;i<=NF;i++) { if ($i == "root") { print $(i+1) } } }' /proc/cmdline)
-
 # 执行文件系统更新
 echo ">>> mount -t ext4 /dev/mmcblk0p7 /userdata"
 mount -t ext4 /dev/mmcblk0p7 /userdata
@@ -22,6 +19,7 @@ if [ -f /userdata/boot.img ]; then
 	echo "start upgrade boot.img"
 	dd if=/userdata/boot.img of=/dev/mmcblk0p4 oflag=direct conv=fsync
 	rm -rf /userdata/boot.img
+	touch /dev/reboot_flag
 	echo "upgrade boot end"
 fi
 
@@ -42,7 +40,11 @@ echo ">>> umount /dev/mmcblk0p7"
 umount /dev/mmcblk0p7
 # 文件系统更新完成
 
-mount -t erofs $root /root
+# Mounting root file system
+# root=$(awk -F'[ =]' '{ for(i=1;i<=NF;i++) { if ($i == "root") { print $(i+1) } } }' /proc/cmdline)
+# mount -t erofs $root /root
+
+mount -t erofs /dev/mmcblk0p5 /root
 if [ $? -ne 0 ]; then
 	exit 0
 fi

@@ -458,11 +458,11 @@ int video_GetFrame(get_frame_type_t type, frameInfo_vi_t *fvi_info, void *arg)
             printf("error: GET_VENC_FRAME fail: ret:0x%x\n", s32Ret);
             return s32Ret;
         }
-    } else if (type == GET_RTSP_FRAME) {
+    } else if (type == GET_VENC2_FRAME) {
         video_venc_param_t *venc = get_venc_param();
-        s32Ret = rv1106_venc_GetStream(&venc[0], fvi_info);
+        s32Ret = rv1106_venc_GetStream(&venc[1], fvi_info);
         if (s32Ret != RK_SUCCESS) {
-            printf("error: GET_RTSP_FRAME fail: ret:0x%x\n", s32Ret);
+            printf("error: GET_VENC2_FRAME fail: ret:0x%x\n", s32Ret);
             return s32Ret;
         }
     } else if (type == GET_IVA_FRAME) {

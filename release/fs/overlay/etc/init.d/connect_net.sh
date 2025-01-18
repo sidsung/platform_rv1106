@@ -60,19 +60,19 @@ network_init()
             echo "eth0 not exist"
             exit 1
         fi
-    fi
 
-    ethaddr1=`ifconfig -a | grep "eth.*HWaddr" | awk '{print $5}'`
-    if [ -f /configs/ethaddr.txt ]; then
-        ethaddr2=`cat /configs/ethaddr.txt`
-        if [ $ethaddr1 == $ethaddr2 ]; then
-            echo "eth HWaddr cfg ok"
+        ethaddr1=`ifconfig -a | grep "eth.*HWaddr" | awk '{print $5}'`
+        if [ -f /configs/ethaddr.txt ]; then
+            ethaddr2=`cat /configs/ethaddr.txt`
+            if [ $ethaddr1 == $ethaddr2 ]; then
+                echo "eth HWaddr cfg ok"
+            else
+                ifconfig eth0 down
+                ifconfig eth0 hw ether $ethaddr2
+            fi
         else
-            ifconfig eth0 down
-            ifconfig eth0 hw ether $ethaddr2
+            echo $ethaddr1 > /configs/ethaddr.txt
         fi
-    else
-        echo $ethaddr1 > /configs/ethaddr.txt
     fi
 }
 

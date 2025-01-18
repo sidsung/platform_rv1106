@@ -140,8 +140,8 @@ int rv1106_vpss_init(video_vpss_param_t *vpss)
             stVpssChnAttr.enCompressMode = COMPRESS_MODE_NONE;
             stVpssChnAttr.bMirror = chn[i].bMirror;
             stVpssChnAttr.bFlip = chn[i].bFlip;
-            stVpssChnAttr.u32Depth = 1;
-            stVpssChnAttr.u32FrameBufCnt = 3;
+            stVpssChnAttr.u32Depth = chn[i].Depth;
+            stVpssChnAttr.u32FrameBufCnt = chn[i].bufCount;
 
             s32Ret = RK_MPI_VPSS_SetChnAttr(vpss->VpssGrpID, chn[i].VpssChnID, &stVpssChnAttr);
             if (s32Ret != RK_SUCCESS) {

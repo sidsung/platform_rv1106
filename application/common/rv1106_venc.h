@@ -15,6 +15,9 @@ typedef struct {
     int height;
     PIXEL_FORMAT_E PixelFormat;
     MPP_CHN_S bindSrcChn;
+    RK_U32 bitRate;
+    RK_U32 bufSize;
+    RK_U32 bufCount;
 } video_venc_param_t;
 
 int rv1106_venc_init(video_venc_param_t *venc);

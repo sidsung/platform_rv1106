@@ -81,7 +81,7 @@ int rv1106_vi_chn_init(video_vi_chn_param_t *vi_chn)
     }
 
     memset(&vi_chn_attr, 0, sizeof(vi_chn_attr));
-    vi_chn_attr.stIspOpt.u32BufCount = 3;
+    vi_chn_attr.stIspOpt.u32BufCount = vi_chn->bufCount;
     vi_chn_attr.stIspOpt.enMemoryType = VI_V4L2_MEMORY_TYPE_DMABUF; // VI_V4L2_MEMORY_TYPE_MMAP;
     vi_chn_attr.stIspOpt.stMaxSize.u32Width = vi_chn->width;
     vi_chn_attr.stIspOpt.stMaxSize.u32Height = vi_chn->height;
@@ -92,7 +92,7 @@ int rv1106_vi_chn_init(video_vi_chn_param_t *vi_chn)
     vi_chn_attr.stFrameRate.s32DstFrameRate = vi_chn->DstFrameRate;
     vi_chn_attr.enPixelFormat = vi_chn->PixelFormat;
     vi_chn_attr.enCompressMode = COMPRESS_MODE_NONE; // COMPRESS_AFBC_16x16;
-    vi_chn_attr.u32Depth = 1;
+    vi_chn_attr.u32Depth = vi_chn->Depth;
     vi_chn_attr.bMirror = vi_chn->bMirror;
     vi_chn_attr.bFlip = vi_chn->bFlip;
     ret = RK_MPI_VI_SetChnAttr(vi_chn->ViPipe, vi_chn->viChnId, &vi_chn_attr);

@@ -1,0 +1,56 @@
+#!/bin/sh
+
+export PATH=/sbin:/usr/sbin:/bin:/usr/bin
+
+# devtmpfs does not get automounted for initramfs
+mount -t devtmpfs devtmpfs /dev
+mount -t proc proc /proc
+mount -t sysfs sysfs /sys
+
+exec 0</dev/console
+exec 1>/dev/console
+exec 2>/dev/console
+
+# Mounting root file system
+root=$(awk -F'[ =]' '{ for(i=1;i<=NF;i++) { if ($i == "root") { print $(i+1) } } }' /proc/cmdline)
+
+# 执行文件系统更新
+echo ">>> mount -t ext4 /dev/mmcblk0p7 /userdata"
+mount -t ext4 /dev/mmcblk0p7 /userdata
+
+if [ -f /userdata/boot.img ]; then
+	echo "start upgrade boot.img"
+	dd if=/userdata/boot.img of=/dev/mmcblk0p4 oflag=direct conv=fsync
+	rm -rf /userdata/boot.img
+	echo "upgrade boot end"
+fi
+
+if [ -f /userdata/rootfs.img ]; then
+	echo "start upgrade rootfs.img"
+	dd if=/userdata/rootfs.img of=/dev/mmcblk0p5 oflag=direct conv=fsync
+	rm -rf /userdata/rootfs.img
+	echo "upgrade rootfs end"
+fi
+
+if [ -f /userdata/oem.img ]; then
+	echo "start upgrade oem.img"
+	dd if=/userdata/oem.img of=/dev/mmcblk0p6 oflag=direct conv=fsync
+	rm -rf /userdata/oem.img
+	echo "upgrade oem end"
+fi
+echo ">>> umount /dev/mmcblk0p7"
+umount /dev/mmcblk0p7
+# 文件系统更新完成
+
+mount -t erofs $root /root
+if [ $? -ne 0 ]; then
+	exit 0
+fi
+
+# Move virtual filesystems over to the real filesystem
+mount -n -o move /sys /root/sys
+mount -n -o move /proc /root/proc
+mount -n -o move /dev /root/dev
+
+# Chain to real filesystem
+exec busybox switch_root /root linuxrc

@@ -13,6 +13,8 @@ BUILD_TMP_DIR=${RELEASE_DIR}/build/tmp
 
 TOOLS_DIR=${RELEASE_DIR}/tools
 
+RAMDISK_SOURCE=${RELEASE_DIR}/fs/ramdisk
+RAMDISK_TMP_SOURCE=${BUILD_TMP_DIR}/ramdisk
 ROOTFS_SOURCE=${RELEASE_DIR}/fs/rootfs
 ROOTFS_TMP_SOURCE=${BUILD_TMP_DIR}/rootfs
 OEM_SOURCE=${RELEASE_DIR}/fs/oem
@@ -20,6 +22,7 @@ OEM_TMP_SOURCE=${BUILD_TMP_DIR}/oem
 USERDATA_SOURCE=${RELEASE_DIR}/fs/userdata
 IMAGES_SOURCE=${RELEASE_DIR}/images
 
+RAMDISK_IMG="${BUILD_TMP_DIR}/ramdisk.img"
 ROOTFS_IMG="${OUTPUT_DIR}/rootfs.img"
 OEM_IMG="${OUTPUT_DIR}/oem.img"
 USERDATA_IMG="${OUTPUT_DIR}/userdata.img"
@@ -30,6 +33,7 @@ CROSS_COMPILE=arm-rockchip830-linux-uclibcgnueabihf-
 BUILDROOT_DIR=${SDK_ROOT_DIR}/sysdrv/source/buildroot
 BUILDROOT_VER=buildroot-2023.02.6
 BUILDROOT_DEFCONFIG=luckfox_pico_ultra_custom_defconfig
+# BUILDROOT_DEFCONFIG=luckfox_pico_ramdisk_defconfig
 
 KERNEL_DIR=${SDK_ROOT_DIR}/sysdrv/source/kernel
 KERNEL_DEFCONFIG=luckfox_rv1106_pico_ultra_defconfig
@@ -106,9 +110,20 @@ function build_erofs() {
     mkfs.erofs -zlz4hc,12 ${dst} ${src}
 }
 
+function build_cpio() {
+    # source files
+    src=$1
+    # generate image
+    dst=$2
+
+    cd ${src}
+    find . | cpio --quiet -H newc -o > ${dst}
+}
+
 function build_release() {
     start_build
 
+    cp -rd ${RAMDISK_SOURCE} ${RAMDISK_TMP_SOURCE}
     cp -rd ${ROOTFS_SOURCE} ${ROOTFS_TMP_SOURCE}
     cp -rd ${OEM_SOURCE} ${OEM_TMP_SOURCE}
     cp -rd ${RELEASE_DIR}/fs/overlay/* ${ROOTFS_TMP_SOURCE}
@@ -117,6 +132,7 @@ function build_release() {
     find ./ -type d | xargs -I {} rm -f {}/.gitkeep
     cd -
 
+    build_cpio ${RAMDISK_TMP_SOURCE} ${RAMDISK_IMG}
     build_erofs ${ROOTFS_TMP_SOURCE} ${ROOTFS_IMG}
     # build_ext4 ${ROOTFS_TMP_SOURCE} ${ROOTFS_IMG} 64M
     build_ext4 ${OEM_TMP_SOURCE} ${OEM_IMG} 64M
@@ -145,7 +161,7 @@ function buildroot_create() {
     mkdir -p ${BUILDROOT_DIR}/${BUILDROOT_VER}
     tar xzf ${SDK_ROOT_DIR}/sysdrv/tools/board/buildroot/buildroot-2023.02.6.tar.gz -C ${BUILDROOT_DIR}
     cp -rfd ${SDK_ROOT_DIR}/sysdrv/buildroot_dl ${BUILDROOT_DIR}/${BUILDROOT_VER}/dl
-    cp ${SDK_ROOT_DIR}/sysdrv/tools/board/buildroot/luckfox_pico_ultra_custom_defconfig ${BUILDROOT_DIR}/${BUILDROOT_VER}/configs/
+    cp ${SDK_ROOT_DIR}/sysdrv/tools/board/buildroot/*_defconfig ${BUILDROOT_DIR}/${BUILDROOT_VER}/configs/
     cp ${SDK_ROOT_DIR}/sysdrv/tools/board/buildroot/busybox-custom.config ${BUILDROOT_DIR}/${BUILDROOT_VER}/package/busybox/
     cp ${HCITOOL_TOOL_PATH}/0001-Fixed-header-file-errors.patch ${BUILDROOT_DIR}/${BUILDROOT_VER}/package/bluez5_utils/
     cp ${HCITOOL_TOOL_PATH}/0002-Fix-build-errors.patch ${BUILDROOT_DIR}/${BUILDROOT_VER}/package/bluez5_utils/

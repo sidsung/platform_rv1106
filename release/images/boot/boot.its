@@ -34,9 +34,8 @@
 			};
 		};
 
-/*
 		ramdisk {
-			data = /incbin/("./ramdisk");
+			data = /incbin/("./ramdisk.img");
 			compression = "none";
 			type = "ramdisk";
 			arch = "arm";
@@ -47,7 +46,7 @@
 				algo = "sha256";
 			};
 		};
-*/
+
 		resource {
 			data = /incbin/("./resource.img");
 			type = "multi";
@@ -66,7 +65,7 @@
 			rollback-index = <0>;
 			fdt = "fdt";
 			kernel = "kernel";
-			/* ramdisk = "ramdisk"; */
+			ramdisk = "ramdisk";
 			multi = "resource";
 		};
 	};

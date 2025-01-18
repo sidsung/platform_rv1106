@@ -5,6 +5,8 @@ echo -e "\n>>>>>>>>>>>> Run Rootfs rcS <<<<<<<<<<<<\n"
 chown root:root /var/empty
 chmod 700 /var/empty
 
+mkdir /tmp/seedrng
+
 # Start all init scripts in /etc/init.d
 # executing them in numerical order.
 #

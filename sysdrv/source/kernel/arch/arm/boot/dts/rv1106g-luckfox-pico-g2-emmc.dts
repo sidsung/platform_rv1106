@@ -127,6 +127,17 @@
 		};
 	};
 	*/
+
+	pwmleds {
+		compatible = "pwm-leds";
+
+		spot_light {
+			label = "spot_light";
+			pwms = <&pwm7 0 25000 0>;
+			max-brightness = <255>;
+		};
+	};
+
 };
 
 /***************************** AUDIO ********************************/
@@ -384,6 +395,10 @@
 };
 &pwm6 {
 	pinctrl-0 = <&pwm6m1_pins &pwm6m2_pins>;
+};
+&pwm7 {
+	status = "okay";
+	pinctrl-0 = <&pwm7m1_pins>;
 };
 &pwm8 {
 	pinctrl-0 = <&pwm8m1_pins>;

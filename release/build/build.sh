@@ -42,7 +42,7 @@ KERNEL_DTS=rv1106g-luckfox-pico-ultra-custom.dts
 UBOOT_DIR=${SDK_ROOT_DIR}/sysdrv/source/uboot/u-boot
 UBOOT_DEFCONFIG=luckfox_rv1106_pico_ultra_defconfig
 
-PARTITION="32K(env),512K@32K(idblock),256K(uboot),32M(boot),512M(rootfs),512M(oem),512M(userdata)"
+PARTITION="32K(env),512K@32K(idblock),256K(uboot),32M(boot),512M(rootfs),512M(oem),512M(userdata),-(reserved)"
 ENV_PART_SIZE="0x8000"
 BOOT_ENV="sys_bootargs= root=/dev/mmcblk0p5 rootfstype=erofs ro init=/linuxrc"
 
@@ -214,7 +214,7 @@ function build_buildrootconfig() {
     if [ "$BUILDROOT_CONFIG_FILE_MD5" != "$BUILDROOT_CONFIG_FILE_NEW_MD5" ]; then
         msg_info "Buildroot Save Defconfig"
         make ARCH=arm CROSS_COMPILE=${CROSS_COMPILE} savedefconfig -C ${BUILDROOT_DIR}/${BUILDROOT_VER}
-        cp ${BUILDROOT_DIR}/${BUILDROOT_VER}/configs/luckfox_pico_ultra_custom_defconfig ${SDK_ROOT_DIR}/sysdrv/tools/board/buildroot/
+        cp ${BUILDROOT_DIR}/${BUILDROOT_VER}/configs/${BUILDROOT_DEFCONFIG} ${SDK_ROOT_DIR}/sysdrv/tools/board/buildroot/
     fi
 
     finish_build

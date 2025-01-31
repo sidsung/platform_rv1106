@@ -40,8 +40,6 @@ int rv1106_vpss_init(video_vpss_param_t *vpss)
 
     VPSS_GRP_ATTR_S stGrpVpssAttr;
     VPSS_CHN_ATTR_S stVpssChnAttr;
-    VPSS_CROP_INFO_S pstgrpCropInfo;
-    VPSS_CROP_INFO_S pstchnCropInfo;
 
     if (vpss->enable == 0) {
         printf("error: vpss not enable, vpss Grp:%d\n", vpss->VpssGrpID);
@@ -86,7 +84,8 @@ int rv1106_vpss_init(video_vpss_param_t *vpss)
             RK_LOGE("RK_MPI_VPSS_ResetGrp failed with %#x!\n", s32Ret);
             break;
         }
-
+/*
+    VPSS_CROP_INFO_S pstgrpCropInfo;
         pstgrpCropInfo.bEnable = RK_FALSE;
         pstgrpCropInfo.enCropCoordinate = VPSS_CROP_RATIO_COOR;
         pstgrpCropInfo.stCropRect.s32X = 0;
@@ -99,12 +98,7 @@ int rv1106_vpss_init(video_vpss_param_t *vpss)
             RK_LOGE("RK_MPI_VPSS_SetGrpCrop failed with %#x!\n", s32Ret);
             break;
         }
-        // s32Ret = RK_MPI_VPSS_GetGrpCrop(vpss->VpssGrpID, &pstgrpCropInfo);
-        // if (s32Ret != RK_SUCCESS) {
-        //     RK_LOGE("RK_MPI_VPSS_GetGrpCrop failed with %#x!\n", s32Ret);
-        //     break;
-        // }
-
+*/
         for (i = 0; i < sizeof(vpss->chn) / sizeof(video_vpss_chn_param_t); i++) {
             if (chn[i].enable == 0) {
                 continue;
@@ -112,23 +106,27 @@ int rv1106_vpss_init(video_vpss_param_t *vpss)
 
             printf("====VPSS init grp:%d channel: %d ==== \n", vpss->VpssGrpID, chn[i].VpssChnID);
 
-           pstchnCropInfo.bEnable = chn[i].Crop;
-           pstchnCropInfo.enCropCoordinate = VPSS_CROP_RATIO_COOR;
-           pstchnCropInfo.stCropRect.s32X = chn[i].X;
-           pstchnCropInfo.stCropRect.s32Y = chn[i].Y;
-           pstchnCropInfo.stCropRect.u32Width = chn[i].outWidth * 1000 / vpss->inWidth;
-           pstchnCropInfo.stCropRect.u32Height = chn[i].outHeight * 1000 / vpss->inHeight;
+            if (chn[i].Crop) {
+                VPSS_CROP_INFO_S pstchnCropInfo;
+                if (chn[i].cropX % 2 || chn[i].cropY % 2
+                    || chn[i].cropW % 2 || chn[i].cropH % 2) {
+                    printf("[%s %d] stCropRect failed!\n", __func__, __LINE__);
+                    return s32Ret;
+                }
 
-            s32Ret = RK_MPI_VPSS_SetChnCrop(vpss->VpssGrpID, chn[i].VpssChnID, &pstchnCropInfo);
-            if (s32Ret != RK_SUCCESS) {
-                RK_LOGE("RK_MPI_VPSS_SetChnCrop failed with %#x!\n", s32Ret);
-                return s32Ret;
+                pstchnCropInfo.bEnable = chn[i].Crop;
+                pstchnCropInfo.enCropCoordinate = VPSS_CROP_RATIO_COOR;
+                pstchnCropInfo.stCropRect.s32X = chn[i].cropX * 1000 / vpss->inWidth;
+                pstchnCropInfo.stCropRect.s32Y = chn[i].cropY * 1000 / vpss->inHeight;
+                pstchnCropInfo.stCropRect.u32Width = chn[i].cropW * 1000 / vpss->inWidth;
+                pstchnCropInfo.stCropRect.u32Height = chn[i].cropH * 1000 / vpss->inHeight;
+
+                s32Ret = RK_MPI_VPSS_SetChnCrop(vpss->VpssGrpID, chn[i].VpssChnID, &pstchnCropInfo);
+                if (s32Ret != RK_SUCCESS) {
+                    RK_LOGE("RK_MPI_VPSS_SetChnCrop failed with %#x!\n", s32Ret);
+                    return s32Ret;
+                }
             }
-            // s32Ret = RK_MPI_VPSS_GetChnCrop(vpss->VpssGrpID, chn[i].VpssChnID, &pstchnCropInfo);
-            // if (s32Ret != RK_SUCCESS) {
-            //     RK_LOGE("RK_MPI_VPSS_GetChnCrop failed with %#x!\n", s32Ret);
-            //     return s32Ret;
-            // }
 
             stVpssChnAttr.enChnMode = VPSS_CHN_MODE_USER;
             stVpssChnAttr.enDynamicRange = DYNAMIC_RANGE_SDR8;

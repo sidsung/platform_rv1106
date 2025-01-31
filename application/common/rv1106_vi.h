@@ -20,8 +20,13 @@ typedef struct {
     RK_U32 Depth;
     RK_BOOL bMirror;
     RK_BOOL bFlip;
-} video_vi_chn_param_t;
 
+    RK_BOOL Crop;
+    int cropX;
+    int cropY;
+    int cropW;
+    int cropH;
+} video_vi_chn_param_t;
 typedef struct {
     int enable;
     VI_DEV ViDevId;

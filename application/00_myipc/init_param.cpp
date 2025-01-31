@@ -165,7 +165,7 @@ void init_video_param_list(void)
     venc[0].enable = 1;
     venc[0].vencChnId = 0;
     venc[0].enType = RK_VIDEO_ID_AVC;
-    venc[0].bitRate = 2 * 1024;
+    venc[0].bitRate = 5 * 1024;
     venc[0].height = vi_chn[0].height;
     venc[0].width = vi_chn[0].width;
     venc[0].bufSize = venc[0].width * venc[0].width / 2;

@@ -41,6 +41,9 @@
 #include "init_param.h"
 #include "video.h"
 
+#include "osd.h"
+#include "utils.h"
+
 pthread_t g_video_main_thread_id;
 pthread_t g_video_sub_thread_id;
 pthread_t g_video_third_thread_id;
@@ -118,24 +121,31 @@ static void *video_main_thread(void *pArgs)
     int s32Ret = -1;
     video_vi_chn_param_t *vi_chn = get_vi_chn_param();
     video_vpss_param_t *vpss = get_vpss_param();
-    video_rgn_param_t *rgn = get_rgn_param();
 
     VIDEO_FRAME_INFO_S stViFrame;
+    uint8_t* frame_data = NULL;
+    int mpi_src_fd;
     smart_detect_result_obj_item_t detect_obj_list = {0};
 
     printf("[%s %d] Start video main stream thread......\n", __FILE__, __LINE__);
 
     vi_chn = &vi_chn[0];
-    rgn = &rgn[0];
 
     while (g_video_capture_thread_run) {
         detect_obj_list.object_number = 0;
+        mpi_src_fd = 0;
         do {
             s32Ret = RK_MPI_VI_GetChnFrame(vi_chn->ViPipe, vi_chn->viChnId, &stViFrame, 1000);
             if (s32Ret != RK_SUCCESS) {
                 printf("[%s %d] error: RK_MPI_VI_GetChnFrame fail: ret:0x%X\n", __func__, __LINE__, s32Ret);
                 break;
             }
+
+            mpi_src_fd = RK_MPI_MB_Handle2Fd(stViFrame.stVFrame.pMbBlk);
+            frame_data = (uint8_t*)RK_MPI_MB_Handle2VirAddr(stViFrame.stVFrame.pMbBlk);
+
+            rga_buffer_handle_t src_handle = importbuffer_fd(mpi_src_fd, stViFrame.stVFrame.u64PrivateData);
+            rga_buffer_t src_rga_buffer = wrapbuffer_handle(src_handle, stViFrame.stVFrame.u32Width, stViFrame.stVFrame.u32Height, RK_FORMAT_YCbCr_420_SP);
 
 #if ENABLE_ROCKCHIP_IVA
             s32Ret = rv1106_iva_get_result(&detect_obj_list);
@@ -162,18 +172,14 @@ static void *video_main_thread(void *pArgs)
                     obj_rect[i] = {X, Y, W, H};
                 }
 
-                int mpi_src_fd = RK_MPI_MB_Handle2Fd(stViFrame.stVFrame.pMbBlk);
-                rga_buffer_handle_t src_handle = importbuffer_fd(mpi_src_fd, stViFrame.stVFrame.u64PrivateData);
-                rga_buffer_t src_img = wrapbuffer_handle(src_handle, stViFrame.stVFrame.u32Width, stViFrame.stVFrame.u32Height, RK_FORMAT_YCbCr_420_SP);
-
 /*
-                s32Ret = imcheck({}, src_img, {}, obj_rect[0], IM_COLOR_FILL);
+                s32Ret = imcheck({}, src_rga_buffer, {}, obj_rect[0], IM_COLOR_FILL);
                 if (IM_STATUS_NOERROR != s32Ret) {
                     printf("%d, check error! %s", __LINE__, imStrError((IM_STATUS)s32Ret));
                     // break;
                 }
 */
-                s32Ret = imrectangleArray(src_img, obj_rect, detect_obj_list.object_number, 0xff00ff00, 4);
+                s32Ret = imrectangleArray(src_rga_buffer, obj_rect, detect_obj_list.object_number, 0xff00ff00, 4);
                 if (s32Ret != IM_STATUS_SUCCESS) {
                     printf("%d imrectangleArray running failed, %s\n", __LINE__, imStrError((IM_STATUS)s32Ret));
                     s32Ret = -1;
@@ -181,11 +187,17 @@ static void *video_main_thread(void *pArgs)
                 }
             }
 
+            update_osd(&stViFrame, src_rga_buffer, frame_data);
+
             s32Ret = RK_MPI_VPSS_SendFrame(vpss->VpssGrpID, 0, &stViFrame, 1000);
             if (s32Ret != RK_SUCCESS) {
                 printf("[%s %d] error: RK_MPI_VPSS_SendFrame fail: ret:0x%X\n", __func__, __LINE__, s32Ret);
                 // break;
             }
+
+            // if (stViFrame.stVFrame.u32TimeRef > 20 && stViFrame.stVFrame.u32TimeRef < 25) {
+            //     utils_write_file("./main.bin", frame_data, stViFrame.stVFrame.u64PrivateData);
+            // }
 
             // static uint64_t last_timestamp = 0;
             // printf("main ---> seq:%d w:%d h:%d fmt:%d size:%lld delay:%dms fps:%.1f\n", stViFrame.stVFrame.u32TimeRef, stViFrame.stVFrame.u32Width, stViFrame.stVFrame.u32Height, stViFrame.stVFrame.enPixelFormat, stViFrame.stVFrame.u64PrivateData, (uint32_t)(stViFrame.stVFrame.u64PTS - last_timestamp) / 1000, (1000.0 / ((stViFrame.stVFrame.u64PTS - last_timestamp) / 1000)));
@@ -264,34 +276,6 @@ static void *video_third_thread(void *pArgs)
     return RK_NULL;
 }
 #endif
-
-int video_save_file(uint32_t frame_seq, uint64_t frame_size, uint8_t *frame_data)
-{
-    static int frame_index = 0;
-    static FILE* save_file = NULL;
-
-    int start_frame = 10;
-    int save_num = 5;
-
-    if (!save_file && frame_index < (start_frame + save_num)) {
-        printf("open file\n");
-        save_file = fopen("./frame.bin", "w");
-    }
-
-    if (frame_index++ < (start_frame + save_num) && frame_index > start_frame) {
-        printf("write seq:%d index:%d\n", frame_seq, frame_index - 10);
-        fwrite(frame_data, 1, frame_size, save_file);
-        fflush(save_file);
-    }
-
-    if (save_file && frame_index > (start_frame + save_num)) {
-        printf("close file\n");
-        fclose(save_file);
-        save_file = NULL;
-    }
-
-    return 0;
-}
 
 int video_GetFrame(get_frame_type_t type, frameInfo_vi_t *fvi_info, void *arg)
 {

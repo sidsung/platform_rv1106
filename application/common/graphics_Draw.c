@@ -46,6 +46,11 @@ int graphics_full(graphics_image_t *img, uint32_t color)
                 *(uint32_t*)&img->buf[i * 4] = color;
             }
         } break;
+        case GD_FMT_RAW_2B: {
+            for (i = 0; i < len; i++) {
+                *(uint16_t*)&img->buf[i * 2] = color;
+            }
+        } break;
         default:
             printf("[%s %d] error: unsupport this fmt : %d\n", __func__, __LINE__, img->fmt);
         break;
@@ -359,6 +364,26 @@ int graphics_fillrectangle(graphics_image_t *img, uint32_t start_x, uint32_t sta
                 }
             }
         } break;
+        case GD_FMT_RAW_2B: {
+            for ( ; start_y <= end_y; start_y++) {
+                for (x = start_x; x <= end_x; x++) {
+                    if (flip == 0) {
+                        x_index = x * 2;
+                        y_index = start_y * img->line_length; //定位到起点行首
+                    } else if (flip == 1) {
+                        x_index = (img->width - start_x - x) * 2;
+                        y_index = start_y * img->line_length; //定位到起点行首
+                    } else if (flip == 2) {
+                        x_index = x * 2;
+                        y_index = (img->height - start_y) * img->line_length; //定位到终点行首
+                    } else {
+                        x_index = (img->width - start_x - x) * 2;
+                        y_index = (img->height - start_y) * img->line_length; //定位到终点行首
+                    }
+                    *(uint16_t*)&img->buf[y_index + x_index] = color;
+                }
+            }
+        } break;
         default:
             printf("[%s %d] error: unsupport this fmt : %d\n", __func__, __LINE__, img->fmt);
         break;
@@ -398,17 +423,18 @@ int graphics_show_char(graphics_image_t *img, uint32_t start_x, uint32_t start_y
     end_y = start_y + h;
 
     /* 对传入参数的校验 */
-    if (end_x >= img->width || end_y >= img->height) {
+    if (end_x > img->width || end_y > img->height) {
         printf("[%s %d] warning: coordinate out of range\n", __func__, __LINE__);
+        printf("start_x:%d start_y:%d end_x:%d end_y:%d\n", start_x, start_y, end_x, end_y);
         return ret;
     }
 
     switch (img->fmt) {
         case GD_FMT_BGRA5551: {
             color = color & 0xff000000 ? color | 0x01000000 : color;
-            for ( ; start_y <= end_y; start_y++) {
+            for ( ; start_y < end_y; start_y++) {
                 data = buf; buf += w / 8; j = 0;
-                for (i = start_x; i <= end_x; i++) {
+                for (i = start_x; i < end_x; i++) {
                     if (*(data + j / 8) & (0x80 >> j % 8)) {
                         if (flip == 0) {
                             x_index = i * 2;
@@ -431,9 +457,9 @@ int graphics_show_char(graphics_image_t *img, uint32_t start_x, uint32_t start_y
             }
         } break;
         case GD_FMT_BGR888: {
-            for ( ; start_y <= end_y; start_y++) {
+            for ( ; start_y < end_y; start_y++) {
                 data = buf; buf += w / 8; j = 0;
-                for (i = start_x; i <= end_x; i++) {
+                for (i = start_x; i < end_x; i++) {
                     if (*(data + j / 8) & (0x80 >> j % 8)) {
                         if (flip == 0) {
                             x_index = i * 3;
@@ -458,9 +484,9 @@ int graphics_show_char(graphics_image_t *img, uint32_t start_x, uint32_t start_y
             }
         } break;
         case GD_FMT_RGB888: {
-            for ( ; start_y <= end_y; start_y++) {
+            for ( ; start_y < end_y; start_y++) {
                 data = buf; buf += w / 8; j = 0;
-                for (i = start_x; i <= end_x; i++) {
+                for (i = start_x; i < end_x; i++) {
                     if (*(data + j / 8) & (0x80 >> j % 8)) {
                         if (flip == 0) {
                             x_index = i * 3;
@@ -485,9 +511,9 @@ int graphics_show_char(graphics_image_t *img, uint32_t start_x, uint32_t start_y
             }
         } break;
         case GD_FMT_BGRA8888: {
-            for ( ; start_y <= end_y; start_y++) {
+            for ( ; start_y < end_y; start_y++) {
                 data = buf; buf += w / 8; j = 0;
-                for (i = start_x; i <= end_x; i++) {
+                for (i = start_x; i < end_x; i++) {
                     if (*(data + j / 8) & (0x80 >> j % 8)) {
                         if (flip == 0) {
                             x_index = i * 4;
@@ -509,6 +535,32 @@ int graphics_show_char(graphics_image_t *img, uint32_t start_x, uint32_t start_y
                 }
             }
         } break;
+        case GD_FMT_RAW_2B: {
+            for ( ; start_y < end_y; start_y++) {
+                data = buf; buf += w / 8; j = 0;
+                for (i = start_x; i < end_x; i++) {
+                    if (*(data + j / 8) & (0x80 >> j % 8)) {
+                        if (flip == 0) {
+                            x_index = i * 2;
+                            y_index = start_y * img->line_length; //定位到起点行首
+                        } else if (flip == 1) {
+                            x_index = (img->width - i) * 2;
+                            y_index = start_y * img->line_length; //定位到起点行首
+                        } else if (flip == 2) {
+                            x_index = i * 2;
+                            y_index = (img->height - start_y) * img->line_length; //定位到起点行首
+                        } else {
+                            x_index = (img->width - i) * 2;
+                            y_index = (img->height - start_y) * img->line_length; //定位到起点行首
+                        }
+
+                        *(uint16_t*)&img->buf[y_index + x_index] = color;
+                    }
+                    j++;
+                }
+            }
+        } break;
+
         default:
             printf("[%s %d] error: unsupport this fmt : %d\n", __func__, __LINE__, img->fmt);
         break;

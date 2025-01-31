@@ -13,6 +13,7 @@ linkdev() {
         ln -sf /dev/mmcblk0p5 rootfs
         ln -sf /dev/mmcblk0p6 oem
         ln -sf /dev/mmcblk0p7 userdata
+        ln -sf /dev/mmcblk0p8 disk
     fi
 }
 
@@ -38,8 +39,9 @@ mount_part() {
 case $1 in
     start)
         linkdev
-        mount_part userdata ext4 /userdata ext4
-        mount_part oem ext4 /oem ext4
+        mount_part userdata ext4 /userdata
+        mount_part oem ext4 /oem
+        mount_part disk ext4 /disk
         ;;
     linkdev)
         linkdev ;

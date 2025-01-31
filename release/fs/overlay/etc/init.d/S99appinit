@@ -13,7 +13,7 @@ case $1 in
         /etc/init.d/connect_net.sh &
         enable_coredump
         [ ! -f /oem/etc/init.d/rcS ] || sh /oem/etc/init.d/rcS
-        [ ! -f /system/bin/show_ipaddr ] || /system/bin/show_ipaddr &
+        [ ! -e /dev/fb0 ] || [ ! -f /system/bin/show_ipaddr ] || /system/bin/show_ipaddr &
         ;;
     stop)
         sync

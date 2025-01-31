@@ -26,6 +26,7 @@ RAMDISK_IMG="${BUILD_TMP_DIR}/ramdisk.img"
 ROOTFS_IMG="${OUTPUT_DIR}/rootfs.img"
 OEM_IMG="${OUTPUT_DIR}/oem.img"
 USERDATA_IMG="${OUTPUT_DIR}/userdata.img"
+DISK_IMG="${OUTPUT_DIR}/disk.img"
 
 ################################# 编译配置
 CROSS_COMPILE=arm-rockchip830-linux-uclibcgnueabihf-
@@ -42,7 +43,7 @@ KERNEL_DTS=rv1106g-luckfox-pico-ultra-custom.dts
 UBOOT_DIR=${SDK_ROOT_DIR}/sysdrv/source/uboot/u-boot
 UBOOT_DEFCONFIG=luckfox_rv1106_pico_ultra_defconfig
 
-PARTITION="32K(env),512K@32K(idblock),256K(uboot),32M(boot),512M(rootfs),512M(oem),512M(userdata),-(reserved)"
+PARTITION="32K(env),512K@32K(idblock),256K(uboot),32M(boot),512M(rootfs),512M(oem),512M(userdata),-(disk)"
 ENV_PART_SIZE="0x8000"
 BOOT_ENV="sys_bootargs= root=/dev/mmcblk0p5 rootfstype=erofs ro init=/linuxrc"
 
@@ -137,6 +138,10 @@ function build_release() {
     # build_ext4 ${ROOTFS_TMP_SOURCE} ${ROOTFS_IMG} 64M
     build_ext4 ${OEM_TMP_SOURCE} ${OEM_IMG} 64M
     build_ext4 ${USERDATA_SOURCE} ${USERDATA_IMG} 64M
+
+    mkdir ${BUILD_TMP_DIR}/disk
+    build_ext4 ${BUILD_TMP_DIR}/disk ${DISK_IMG} 64M
+
     build_env
 
     cp ${IMAGES_SOURCE}/boot/* ${BUILD_TMP_DIR}/

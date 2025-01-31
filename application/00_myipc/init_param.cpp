@@ -11,9 +11,56 @@
 
 static rv1106_video_init_param_t g_video_param_list_ctx;
 
+int g_sensor_raw_width = 1920;
+int g_sensor_raw_height = 1080;
+
+static int init_get_sensor_raw_size(void)
+{
+    FILE *fp = NULL;
+    char buf[256] = {0};
+    char *p = NULL;
+
+    fp = popen("cat /proc/rkisp-vir0 | grep Input | awk -F '[:@]' '{print $3}'", "r");
+    if (fp == NULL) {
+        printf("error: cat /proc/rkisp-vir0 failed\n");
+        return -1;
+    }
+
+    if (fgets(buf, sizeof(buf), fp) == NULL) {
+        printf("error: read /proc/rkisp-vir0 failed\n");
+        pclose(fp);
+        return -1;
+    }
+
+    pclose(fp);
+
+    p = strtok(buf, "x");
+    if (p) {
+        g_sensor_raw_width = atoi(p);
+    }
+
+    p = strtok(NULL, "x");
+    if (p) {
+        g_sensor_raw_height = atoi(p);
+    }
+
+    printf("sensor raw size: %dx%d\n", g_sensor_raw_width, g_sensor_raw_height);
+
+    return 0;
+}
+
+
 void init_video_param_list(void)
 {
     memset(&g_video_param_list_ctx, 0, sizeof(rv1106_video_init_param_t));
+
+    init_get_sensor_raw_size();
+
+    video_vi_chn_param_t *vi_chn = g_video_param_list_ctx.vi_chn;
+    video_vpss_param_t *vpss = g_video_param_list_ctx.vpss;
+    video_venc_param_t *venc = g_video_param_list_ctx.venc;
+    video_rgn_param_t *rgn = g_video_param_list_ctx.rgn;
+    video_iva_param_t *iva = g_video_param_list_ctx.iva;
 
     g_video_param_list_ctx.isp[0].enable = 1;
     g_video_param_list_ctx.isp[0].ViDevId = 0;
@@ -25,99 +72,125 @@ void init_video_param_list(void)
     g_video_param_list_ctx.vi_dev[0].BindPipe.u32Num = 1;
     g_video_param_list_ctx.vi_dev[0].BindPipe.PipeId[0] = 0;
 
-    g_video_param_list_ctx.vi_chn[0].enable = 1;
-    g_video_param_list_ctx.vi_chn[0].ViPipe = 0;
-    g_video_param_list_ctx.vi_chn[0].viChnId = 0;
-    g_video_param_list_ctx.vi_chn[0].width = SENSOR_WIDTH;
-    g_video_param_list_ctx.vi_chn[0].height = SENSOR_HEIGHT;
-    g_video_param_list_ctx.vi_chn[0].SrcFrameRate = -1;
-    g_video_param_list_ctx.vi_chn[0].DstFrameRate = -1;
-    g_video_param_list_ctx.vi_chn[0].PixelFormat = RK_FMT_YUV420SP;
-    g_video_param_list_ctx.vi_chn[0].bMirror = RK_FALSE;
-    g_video_param_list_ctx.vi_chn[0].bFlip = RK_FALSE;
+    vi_chn[0].enable = 1;
+    vi_chn[0].ViPipe = 0;
+    vi_chn[0].viChnId = 0;
+    vi_chn[0].height = 1080;
+    vi_chn[0].width = vi_chn[0].height * g_sensor_raw_width / g_sensor_raw_height;
+    vi_chn[0].SrcFrameRate = -1;
+    vi_chn[0].DstFrameRate = -1;
+    vi_chn[0].PixelFormat = RK_FMT_YUV420SP;
+    vi_chn[0].bMirror = RK_FALSE;
+    vi_chn[0].bFlip = RK_FALSE;
+    vi_chn[0].bufCount = 2;
+    vi_chn[0].Depth = 0;
 
-    g_video_param_list_ctx.vi_chn[1].enable = 1;
-    g_video_param_list_ctx.vi_chn[1].ViPipe = 0;
-    g_video_param_list_ctx.vi_chn[1].viChnId = 1;
-    g_video_param_list_ctx.vi_chn[1].width = 864;
-    g_video_param_list_ctx.vi_chn[1].height = 486;
-    g_video_param_list_ctx.vi_chn[1].SrcFrameRate = -1;
-    g_video_param_list_ctx.vi_chn[1].DstFrameRate = -1;
-    g_video_param_list_ctx.vi_chn[1].PixelFormat = RK_FMT_YUV420SP;
-    g_video_param_list_ctx.vi_chn[1].bMirror = RK_FALSE;
-    g_video_param_list_ctx.vi_chn[1].bFlip = RK_FALSE;
+    vi_chn[1].enable = 1;
+    vi_chn[1].ViPipe = 0;
+    vi_chn[1].viChnId = 1;
+    vi_chn[1].width = 864;
+    vi_chn[1].height = 486;
+    vi_chn[1].SrcFrameRate = -1;
+    vi_chn[1].DstFrameRate = -1;
+    vi_chn[1].PixelFormat = RK_FMT_YUV420SP;
+    vi_chn[1].bMirror = RK_FALSE;
+    vi_chn[1].bFlip = RK_FALSE;
+    vi_chn[1].bufCount = 2;
+    vi_chn[1].Depth = 1;
 
-    g_video_param_list_ctx.vi_chn[2].enable = 1;
-    g_video_param_list_ctx.vi_chn[2].ViPipe = 0;
-    g_video_param_list_ctx.vi_chn[2].viChnId = 2;
-    g_video_param_list_ctx.vi_chn[2].width = 576;
-    g_video_param_list_ctx.vi_chn[2].height = 324;
-    g_video_param_list_ctx.vi_chn[2].SrcFrameRate = 25;
-    g_video_param_list_ctx.vi_chn[2].DstFrameRate = 10;
-    g_video_param_list_ctx.vi_chn[2].PixelFormat = RK_FMT_YUV420SP;
-    g_video_param_list_ctx.vi_chn[2].bMirror = RK_FALSE;
-    g_video_param_list_ctx.vi_chn[2].bFlip = RK_FALSE;
+    vi_chn[2].enable = 1;
+    vi_chn[2].ViPipe = 0;
+    vi_chn[2].viChnId = 2;
+    vi_chn[2].width = 576;
+    vi_chn[2].height = 324;
+    vi_chn[2].SrcFrameRate = 25;
+    vi_chn[2].DstFrameRate = 10;
+    vi_chn[2].PixelFormat = RK_FMT_YUV420SP;
+    vi_chn[2].bMirror = RK_FALSE;
+    vi_chn[2].bFlip = RK_FALSE;
+    vi_chn[2].bufCount = 2;
+    vi_chn[2].Depth = 1;
 
-    g_video_param_list_ctx.vpss[0].enable = 0;
-    g_video_param_list_ctx.vpss[0].VpssGrpID = 0;
-    g_video_param_list_ctx.vpss[0].inWidth = SENSOR_WIDTH;
-    g_video_param_list_ctx.vpss[0].inHeight = SENSOR_HEIGHT;
-    g_video_param_list_ctx.vpss[0].inPixelFormat = RK_FMT_YUV420SP;
-    g_video_param_list_ctx.vpss[0].bindSrcChn.enModId = RK_ID_VI;
-    g_video_param_list_ctx.vpss[0].bindSrcChn.s32DevId = 0;
-    g_video_param_list_ctx.vpss[0].bindSrcChn.s32ChnId = 0;
+    vpss[0].enable = 0;
+    vpss[0].VpssGrpID = 0;
+    vpss[0].inWidth = vi_chn[0].width;
+    vpss[0].inHeight = vi_chn[0].height;
+    vpss[0].inPixelFormat = RK_FMT_YUV420SP;
+    vpss[0].bindSrcChn.enModId = RK_ID_VI;
+    vpss[0].bindSrcChn.s32DevId = 0;
+    vpss[0].bindSrcChn.s32ChnId = 0;
 
-    g_video_param_list_ctx.vpss[0].chn[0].enable = 1;
-    g_video_param_list_ctx.vpss[0].chn[0].VpssChnID = 0;
-    g_video_param_list_ctx.vpss[0].chn[0].outWidth = 960;
-    g_video_param_list_ctx.vpss[0].chn[0].outHeight = 540;
-    g_video_param_list_ctx.vpss[0].chn[0].SrcFrameRate = 25;
-    g_video_param_list_ctx.vpss[0].chn[0].DstFrameRate = 25;
-    g_video_param_list_ctx.vpss[0].chn[0].outPixelFormat = RK_FMT_RGB888;
-    g_video_param_list_ctx.vpss[0].chn[0].bMirror = RK_FALSE;
-    g_video_param_list_ctx.vpss[0].chn[0].bFlip = RK_FALSE;
+    vpss[0].chn[0].enable = 1;
+    vpss[0].chn[0].VpssChnID = 0;
+    vpss[0].chn[0].outWidth = 960;
+    vpss[0].chn[0].outHeight = 540;
+    vpss[0].chn[0].SrcFrameRate = -1;
+    vpss[0].chn[0].DstFrameRate = -1;
+    vpss[0].chn[0].outPixelFormat = RK_FMT_RGB888;
+    vpss[0].chn[0].bMirror = RK_FALSE;
+    vpss[0].chn[0].bFlip = RK_FALSE;
+    vpss[0].chn[0].bufCount = 2;
+    vpss[0].chn[0].Depth = 0;
 
-    g_video_param_list_ctx.vpss[0].chn[1].enable = 1;
-    g_video_param_list_ctx.vpss[0].chn[1].VpssChnID = 1;
-    g_video_param_list_ctx.vpss[0].chn[1].outWidth = SENSOR_WIDTH;
-    g_video_param_list_ctx.vpss[0].chn[1].outHeight = SENSOR_HEIGHT;
-    g_video_param_list_ctx.vpss[0].chn[1].SrcFrameRate = 25;
-    g_video_param_list_ctx.vpss[0].chn[1].DstFrameRate = 25;
-    g_video_param_list_ctx.vpss[0].chn[1].outPixelFormat = RK_FMT_YUV420SP;
-    g_video_param_list_ctx.vpss[0].chn[1].bMirror = RK_FALSE;
-    g_video_param_list_ctx.vpss[0].chn[1].bFlip = RK_FALSE;
+    vpss[0].chn[1].enable = 1;
+    vpss[0].chn[1].VpssChnID = 1;
+    vpss[0].chn[1].outWidth = vpss[0].inWidth;
+    vpss[0].chn[1].outHeight = vpss[0].inHeight = vi_chn[0].height;
+    vpss[0].chn[1].SrcFrameRate = -1;
+    vpss[0].chn[1].DstFrameRate = -1;
+    vpss[0].chn[1].outPixelFormat = RK_FMT_YUV420SP;
+    vpss[0].chn[1].bMirror = RK_FALSE;
+    vpss[0].chn[1].bFlip = RK_FALSE;
+    vpss[0].chn[1].bufCount = 2;
+    vpss[0].chn[1].Depth = 0;
 
-    g_video_param_list_ctx.venc[0].enable = 1;
-    g_video_param_list_ctx.venc[0].enType = RK_VIDEO_ID_AVC;
-    g_video_param_list_ctx.venc[0].vencChnId = 0;
-    g_video_param_list_ctx.venc[0].width = SENSOR_WIDTH;
-    g_video_param_list_ctx.venc[0].height = SENSOR_HEIGHT;
-    g_video_param_list_ctx.venc[0].PixelFormat = RK_FMT_YUV420SP;
-    g_video_param_list_ctx.venc[0].bindSrcChn.enModId = RK_ID_VI;
-    g_video_param_list_ctx.venc[0].bindSrcChn.s32DevId = 0;
-    g_video_param_list_ctx.venc[0].bindSrcChn.s32ChnId = 0;
+    venc[0].enable = 1;
+    venc[0].vencChnId = 0;
+    venc[0].enType = RK_VIDEO_ID_AVC;
+    venc[0].bitRate = 2 * 1024;
+    venc[0].height = vi_chn[0].height;
+    venc[0].width = vi_chn[0].width;
+    venc[0].bufSize = venc[0].width * venc[0].width / 2;
+    venc[0].bufCount = 1;
+    venc[0].PixelFormat = RK_FMT_YUV420SP;
+    venc[0].bindSrcChn.enModId = RK_ID_VI;
+    venc[0].bindSrcChn.s32DevId = 0;
+    venc[0].bindSrcChn.s32ChnId = 0;
 
-    g_video_param_list_ctx.rgn[0].enable = 0;
-    g_video_param_list_ctx.rgn[0].rgnHandle = 0;
-    g_video_param_list_ctx.rgn[0].layer = 0;
-    g_video_param_list_ctx.rgn[0].type = OVERLAY_RGN;
-    g_video_param_list_ctx.rgn[0].X = 0;
-    g_video_param_list_ctx.rgn[0].Y = 0;
-    g_video_param_list_ctx.rgn[0].width = SENSOR_WIDTH;
-    g_video_param_list_ctx.rgn[0].height = SENSOR_HEIGHT;
-    g_video_param_list_ctx.rgn[0].show = RK_TRUE;
-    g_video_param_list_ctx.rgn[0].mppChn.enModId = RK_ID_VENC;
-    g_video_param_list_ctx.rgn[0].mppChn.s32DevId = 0;
-    g_video_param_list_ctx.rgn[0].mppChn.s32ChnId = 0;
-    g_video_param_list_ctx.rgn[0].overlay.format = RK_FMT_BGRA5551;
-    g_video_param_list_ctx.rgn[0].overlay.u32FgAlpha = 255;
-    g_video_param_list_ctx.rgn[0].overlay.u32BgAlpha = 0;
+    venc[1].enable = 0;
+    venc[1].vencChnId = 1;
+    venc[1].enType = RK_VIDEO_ID_AVC;
+    venc[1].bitRate = 2 * 1024;
+    venc[1].height = 720;
+    venc[1].width = venc[0].height * g_sensor_raw_width / g_sensor_raw_height;
+    venc[1].bufSize = venc[1].width * venc[1].width / 2;
+    venc[1].bufCount = 1;
+    venc[1].PixelFormat = RK_FMT_YUV420SP;
+    venc[1].bindSrcChn.enModId = RK_ID_VPSS;
+    venc[1].bindSrcChn.s32DevId = 0;
+    venc[1].bindSrcChn.s32ChnId = 1;
 
-    g_video_param_list_ctx.iva[0].enable = 1;
-    g_video_param_list_ctx.iva[0].models_path = "/oem/rockiva_data/";
-    g_video_param_list_ctx.iva[0].width = 576;
-    g_video_param_list_ctx.iva[0].height = 324;
-    g_video_param_list_ctx.iva[0].IvaPixelFormat = ROCKIVA_IMAGE_FORMAT_YUV420SP_NV12;
+    rgn[0].enable = 0;
+    rgn[0].rgnHandle = 0;
+    rgn[0].layer = 0;
+    rgn[0].type = OVERLAY_RGN;
+    rgn[0].X = 0;
+    rgn[0].Y = 0;
+    rgn[0].width = venc[0].width = vi_chn[0].width;
+    rgn[0].height = venc[0].height = vi_chn[0].height;
+    rgn[0].show = RK_TRUE;
+    rgn[0].mppChn.enModId = RK_ID_VENC;
+    rgn[0].mppChn.s32DevId = 0;
+    rgn[0].mppChn.s32ChnId = 0;
+    rgn[0].overlay.format = RK_FMT_BGRA5551;
+    rgn[0].overlay.u32FgAlpha = 255;
+    rgn[0].overlay.u32BgAlpha = 0;
+
+    iva[0].enable = 1;
+    iva[0].models_path = "/oem/rockiva_data/";
+    iva[0].width = 576;
+    iva[0].height = 324;
+    iva[0].IvaPixelFormat = ROCKIVA_IMAGE_FORMAT_YUV420SP_NV12;
     // g_video_param_list_ctx.iva[0].result_cb = rv1106_iva_result_cb;
 }
 

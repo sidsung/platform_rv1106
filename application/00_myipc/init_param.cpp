@@ -8,7 +8,11 @@
 #include "main.h"
 
 #include "rv1106_video_init.h"
+
+#if ENABLE_ROCKCHIP_IVA
 #include "rv1106_iva.h"
+#endif
+
 #include "init_param.h"
 
 static rv1106_video_init_param_t g_video_param_list_ctx;

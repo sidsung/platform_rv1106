@@ -21,6 +21,13 @@
 #include "osd.h"
 #include "utils.h"
 
+#include "main.h"
+#include "rv1106_video_init.h"
+
+#if ENABLE_ROCKCHIP_IVA
+#include "rv1106_iva.h"
+#endif
+
 static graphics_image_t g_graphics_image = {0};
 
 static char *get_time_str(void)
@@ -61,28 +68,33 @@ static im_osd_t g_osd_config = {
     },
 };
 
-/*
-static uint16_t argb5551_color_convert(uint8_t a, uint8_t r, uint8_t g, uint8_t b)
+static int update_osd_draw_smart_detect(VIDEO_FRAME_INFO_S *stViFrame)
 {
-    uint16_t color = 0;
+    int s32Ret = 0;
+    smart_detect_result_obj_item_t detect_obj_list = {0};
 
-    color = (g >> 3) << 11;
-    color = color | (r >> 3) << 6;
-    color = color | (a >> 3) << 1;
-    color = color | (b >> 7);
-    return color;
-}
-*/
-static uint16_t argb4444_color_convert(uint8_t a, uint8_t r, uint8_t g, uint8_t b)
-{
-    uint16_t color = 0;
+#if ENABLE_ROCKCHIP_IVA
+    s32Ret = rv1106_iva_get_result(&detect_obj_list);
+#endif
 
-    color = (g >> 4) << 12;
-    color = color | (r >> 4) << 8;
-    color = color | (a >> 4) << 4;
-    color = color | (b >> 4);
+    if (detect_obj_list.object_number) {
+        uint32_t X1, Y1, X2, Y2;
 
-    return color;
+        if (detect_obj_list.object_number > SMART_DETECT_ITEM_NUM) detect_obj_list.object_number = SMART_DETECT_ITEM_NUM;
+
+        for (int i = 0; i < (int)detect_obj_list.object_number; i++) {
+            X1 = ROCKIVA_RATIO_PIXEL_CONVERT(stViFrame->stVFrame.u32Width, detect_obj_list.obj_item[i].x1);
+            Y1 = ROCKIVA_RATIO_PIXEL_CONVERT(stViFrame->stVFrame.u32Height, detect_obj_list.obj_item[i].y1);
+            X2 = ROCKIVA_RATIO_PIXEL_CONVERT(stViFrame->stVFrame.u32Width, detect_obj_list.obj_item[i].x2);
+            Y2 = ROCKIVA_RATIO_PIXEL_CONVERT(stViFrame->stVFrame.u32Height, detect_obj_list.obj_item[i].y2);
+
+            graphics_rectangle(&g_graphics_image, X1, Y1, X2, Y2, color_convert_argb4444_le(detect_obj_list.obj_item[i].rect_color >> 24, ((detect_obj_list.obj_item[i].rect_color & 0x00ff0000) >> 16), ((detect_obj_list.obj_item[i].rect_color & 0x0000ff00) >> 8), (detect_obj_list.obj_item[i].rect_color & 0x000000ff)), 4, 0);
+
+            graphics_show_string(&g_graphics_image, X1 + 5, Y1 + 5, detect_obj_list.obj_item[i].object_name, GD_FONT_16x32B, color_convert_argb4444_le(detect_obj_list.obj_item[i].name_color >> 24, ((detect_obj_list.obj_item[i].name_color & 0x00ff0000) >> 16), ((detect_obj_list.obj_item[i].name_color & 0x0000ff00) >> 8), (detect_obj_list.obj_item[i].name_color & 0x000000ff)), 0);
+        }
+    }
+
+    return s32Ret;
 }
 
 int update_osd(VIDEO_FRAME_INFO_S *stViFrame, rga_buffer_t src_rga_buffer, uint8_t* frame_data)
@@ -121,11 +133,13 @@ int update_osd(VIDEO_FRAME_INFO_S *stViFrame, rga_buffer_t src_rga_buffer, uint8
     g_graphics_image.line_length = g_graphics_image.width * 2;
 
     char *time = get_time_str();
-    graphics_show_string(&g_graphics_image, 0, 0, time, GD_FONT_16x32B, argb4444_color_convert(255, 255, 0, 0), 0);
+    graphics_show_string(&g_graphics_image, 0, 0, time, GD_FONT_16x32B, color_convert_argb4444_le(255, 255, 255, 0), 0);
 
     char info_buf[64];
     snprintf(info_buf, sizeof(info_buf), "seq: %d fps: %.1f", stViFrame->stVFrame.u32TimeRef, fps);
-    graphics_show_string(&g_graphics_image, 0, 32, info_buf, GD_FONT_16x32B, argb4444_color_convert(255, 255, 0, 0), 0);
+    graphics_show_string(&g_graphics_image, 0, 32, info_buf, GD_FONT_16x32B, color_convert_argb4444_le(255, 255, 255, 0), 0);
+
+    update_osd_draw_smart_detect(stViFrame);
 
     fg_handle = importbuffer_fd(fg_dma_fd, fg_buf_size);
     if (fg_handle == 0) {

@@ -6,6 +6,8 @@ extern "C" {
 #ifndef _RV1106_VIDEO_INIT_H_
 #define _RV1106_VIDEO_INIT_H_
 
+#include <semaphore.h>
+
 #include "rv1106_common.h"
 
 #include "rv1106_isp.h"

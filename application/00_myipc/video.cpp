@@ -125,14 +125,12 @@ static void *video_main_thread(void *pArgs)
     VIDEO_FRAME_INFO_S stViFrame;
     uint8_t* frame_data = NULL;
     int mpi_src_fd;
-    smart_detect_result_obj_item_t detect_obj_list = {0};
 
     printf("[%s %d] Start video main stream thread......\n", __FILE__, __LINE__);
 
     vi_chn = &vi_chn[0];
 
     while (g_video_capture_thread_run) {
-        detect_obj_list.object_number = 0;
         mpi_src_fd = 0;
         do {
             s32Ret = RK_MPI_VI_GetChnFrame(vi_chn->ViPipe, vi_chn->viChnId, &stViFrame, 1000);
@@ -146,46 +144,6 @@ static void *video_main_thread(void *pArgs)
 
             rga_buffer_handle_t src_handle = importbuffer_fd(mpi_src_fd, stViFrame.stVFrame.u64PrivateData);
             rga_buffer_t src_rga_buffer = wrapbuffer_handle(src_handle, stViFrame.stVFrame.u32Width, stViFrame.stVFrame.u32Height, RK_FORMAT_YCbCr_420_SP);
-
-#if ENABLE_ROCKCHIP_IVA
-            s32Ret = rv1106_iva_get_result(&detect_obj_list);
-#endif
-
-            if (detect_obj_list.object_number) {
-                im_rect obj_rect[SMART_DETECT_ITEM_NUM] = {};
-                uint32_t X1, Y1, X2, Y2;
-                int X, Y, W, H;
-
-                if (detect_obj_list.object_number > SMART_DETECT_ITEM_NUM) detect_obj_list.object_number = SMART_DETECT_ITEM_NUM;
-
-                for (int i = 0; i < (int)detect_obj_list.object_number; i++) {
-
-                    X1 = ROCKIVA_RATIO_PIXEL_CONVERT(stViFrame.stVFrame.u32Width, detect_obj_list.obj_item[i].x1);
-                    Y1 = ROCKIVA_RATIO_PIXEL_CONVERT(stViFrame.stVFrame.u32Height, detect_obj_list.obj_item[i].y1);
-                    X2 = ROCKIVA_RATIO_PIXEL_CONVERT(stViFrame.stVFrame.u32Width, detect_obj_list.obj_item[i].x2);
-                    Y2 = ROCKIVA_RATIO_PIXEL_CONVERT(stViFrame.stVFrame.u32Height, detect_obj_list.obj_item[i].y2);
-
-                    X = X1; X = X % 2 ? X + 1 : X;
-                    Y = Y1; Y = Y % 2 ? Y + 1 : Y;
-                    W = X2 - X1; W = W % 2 ? W + 1 : W;
-                    H = Y2 - Y1; H = H % 2 ? H + 1 : H;
-                    obj_rect[i] = {X, Y, W, H};
-                }
-
-/*
-                s32Ret = imcheck({}, src_rga_buffer, {}, obj_rect[0], IM_COLOR_FILL);
-                if (IM_STATUS_NOERROR != s32Ret) {
-                    printf("%d, check error! %s", __LINE__, imStrError((IM_STATUS)s32Ret));
-                    // break;
-                }
-*/
-                s32Ret = imrectangleArray(src_rga_buffer, obj_rect, detect_obj_list.object_number, 0xff00ff00, 4);
-                if (s32Ret != IM_STATUS_SUCCESS) {
-                    printf("%d imrectangleArray running failed, %s\n", __LINE__, imStrError((IM_STATUS)s32Ret));
-                    s32Ret = -1;
-                    // break;
-                }
-            }
 
             update_osd(&stViFrame, src_rga_buffer, frame_data);
 

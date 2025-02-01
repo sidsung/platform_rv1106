@@ -24,7 +24,6 @@ extern "C" {
 #include <errno.h>
 #include <pthread.h>
 #include <sys/poll.h>
-#include <semaphore.h>
 
 #include "rv1106_video_init.h"
 

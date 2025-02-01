@@ -43,9 +43,15 @@ typedef struct
     uint8_t *buf;
 } graphics_image_t;
 
+uint16_t color_convert_argb5551_le(uint8_t a, uint8_t r, uint8_t g, uint8_t b);
+uint16_t color_convert_argb4444_le(uint8_t a, uint8_t r, uint8_t g, uint8_t b);
+
+
 int graphics_full(graphics_image_t *img, uint32_t color);
 int graphics_line(graphics_image_t *img, uint32_t x, uint32_t y, uint32_t dir, uint32_t length, uint32_t color, int flip);
-int graphics_rectangle(graphics_image_t *img, uint32_t start_x, uint32_t start_y, uint32_t end_x, uint32_t end_y, uint32_t color, int flip);
+
+int graphics_rectangle(graphics_image_t *img, uint32_t start_x, uint32_t start_y, uint32_t end_x, uint32_t end_y, uint32_t color, int thickness, int flip);
+
 int graphics_fillrectangle(graphics_image_t *img, uint32_t start_x, uint32_t start_y, uint32_t end_x, uint32_t end_y, uint32_t color, int flip);
 
 int graphics_show_char(graphics_image_t *img, uint32_t start_x, uint32_t start_y, uint8_t *buf, graphics_font_size_t size, uint32_t color, int flip);

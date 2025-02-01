@@ -15,6 +15,7 @@ static rv1106_video_init_param_t g_video_param_list_ctx;
 
 int g_sensor_raw_width = 1920;
 int g_sensor_raw_height = 1080;
+int g_sensor_raw_fps = 20;
 
 #if ENABLE_ROCKCHIP_IVA
 static video_iva_param_t g_iva_param = { 0 };
@@ -31,7 +32,7 @@ static int init_get_sensor_raw_size(void)
     char buf[256] = {0};
     char *p = NULL;
 
-    fp = popen("cat /proc/rkisp-vir0 | grep Input | awk -F '[:@]' '{print $3}'", "r");
+    fp = popen("cat /proc/rkisp-vir0 | grep Input | awk -F '[:]' '{print $3}'", "r");
     if (fp == NULL) {
         printf("error: cat /proc/rkisp-vir0 failed\n");
         return -1;
@@ -50,12 +51,17 @@ static int init_get_sensor_raw_size(void)
         g_sensor_raw_width = atoi(p);
     }
 
-    p = strtok(NULL, "x");
+    p = strtok(NULL, "@");
     if (p) {
         g_sensor_raw_height = atoi(p);
     }
 
-    printf("sensor raw size: %dx%d\n", g_sensor_raw_width, g_sensor_raw_height);
+    p = strtok(NULL, "@");
+    if (p) {
+        g_sensor_raw_fps = atoi(p);
+    }
+
+    printf("sensor raw size: %dx%d fps:%d\n", g_sensor_raw_width, g_sensor_raw_height, g_sensor_raw_fps);
 
     return 0;
 }
@@ -106,8 +112,8 @@ void init_video_param_list(void)
     vi_chn[1].viChnId = 1;
     vi_chn[1].width = 576;
     vi_chn[1].height = 324;
-    vi_chn[1].SrcFrameRate = -1;
-    vi_chn[1].DstFrameRate = -1;
+    vi_chn[1].SrcFrameRate = g_sensor_raw_fps;
+    vi_chn[1].DstFrameRate = 10;
     vi_chn[1].PixelFormat = RK_FMT_YUV420SP;
     vi_chn[1].bMirror = RK_FALSE;
     vi_chn[1].bFlip = RK_FALSE;
@@ -130,6 +136,7 @@ void init_video_param_list(void)
     vpss[0].bindSrcChn.s32DevId = 0;
     vpss[0].bindSrcChn.s32ChnId = 0;
 
+#if ENABLE_SCREEN_PANEL
     vpss[0].chn[0].enable = 1;
     vpss[0].chn[0].VpssChnID = 0;
     vpss[0].chn[0].outWidth = 800;
@@ -147,8 +154,8 @@ void init_video_param_list(void)
     // vpss[0].chn[0].cropW = vpss[0].inHeight * vpss[0].chn[0].outWidth / vpss[0].chn[0].outHeight;
     // vpss[0].chn[0].cropX = (vpss[0].inWidth - vpss[0].chn[0].cropW) / 2;
     // vpss[0].chn[0].cropY = (vpss[0].inHeight - vpss[0].chn[0].cropH) / 2;
+#endif
 
-#if ENABLE_SCREEN_PANEL
     vpss[0].chn[1].enable = 1;
     vpss[0].chn[1].VpssChnID = 1;
     vpss[0].chn[1].outWidth = vpss[0].inWidth;
@@ -160,7 +167,6 @@ void init_video_param_list(void)
     vpss[0].chn[1].bFlip = RK_FALSE;
     vpss[0].chn[1].bufCount = 2;
     vpss[0].chn[1].Depth = 0;
-#endif
 
     venc[0].enable = 1;
     venc[0].vencChnId = 0;
@@ -213,6 +219,7 @@ void init_video_param_list(void)
     g_iva_param.IvaPixelFormat = ROCKIVA_IMAGE_FORMAT_YUV420SP_NV12;
 #endif
 
+#if 0
     int i, j;
     i = 0;
     if (vi_chn[i].enable) {
@@ -247,6 +254,8 @@ void init_video_param_list(void)
     if (rgn[i].enable) {
         printf("rgn chn %d: x:%d y:%d w: %d h:%d\n", i, rgn[i].X, rgn[i].Y, rgn[i].width, rgn[i].height);
     }
+#endif
+
 }
 
 rv1106_video_init_param_t *get_video_param_list(void)

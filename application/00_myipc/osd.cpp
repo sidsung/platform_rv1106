@@ -136,8 +136,12 @@ int update_osd(VIDEO_FRAME_INFO_S *stViFrame, rga_buffer_t src_rga_buffer, uint8
     graphics_show_string(&g_graphics_image, 0, 0, time, GD_FONT_16x32B, color_convert_argb4444_le(255, 255, 255, 0), 0);
 
     char info_buf[64];
-    snprintf(info_buf, sizeof(info_buf), "seq: %d fps: %.1f", stViFrame->stVFrame.u32TimeRef, fps);
+    system_status_t *sys_info = get_system_status();
+    snprintf(info_buf, sizeof(info_buf), "CPU: %d%% %d'C / NPU: %d%%", (int)(sys_info->cpu_usage / 10), (int)(sys_info->cpu_temp / 10), (int)(sys_info->npu_usage / 10));
     graphics_show_string(&g_graphics_image, 0, 32, info_buf, GD_FONT_16x32B, color_convert_argb4444_le(255, 255, 255, 0), 0);
+
+    snprintf(info_buf, sizeof(info_buf), "seq: %d fps: %.1f", stViFrame->stVFrame.u32TimeRef, fps);
+    graphics_show_string(&g_graphics_image, 0, 64, info_buf, GD_FONT_16x32B, color_convert_argb4444_le(255, 255, 255, 0), 0);
 
     update_osd_draw_smart_detect(stViFrame);
 

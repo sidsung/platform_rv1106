@@ -11,6 +11,9 @@ obj-y += rv1106_vi.o
 obj-y += rv1106_video_init.o
 obj-y += rv1106_vpss.o
 
-obj-$(CONFIG_ENABLE_SCREEN_PANEL) += screen_panel_driver.o
-obj-$(CONFIG_ENABLE_SCREEN_PANEL) += rgb_lcd.o
 obj-$(CONFIG_ENABLE_ROCKCHIP_IVA) += rv1106_iva.o
+
+ifdef CONFIG_ENABLE_SCREEN_PANEL
+obj-y += screen_panel_driver.o
+obj-y += rgb_lcd.o
+endif

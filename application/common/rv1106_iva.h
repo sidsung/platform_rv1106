@@ -18,7 +18,6 @@ typedef struct {
 
     /************************/
     RockIvaHandle handle;
-    pthread_t push_thread_id;
     int push_thread_run;
 } video_iva_param_t;
 

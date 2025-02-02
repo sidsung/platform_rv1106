@@ -17,7 +17,16 @@ DIRS := $(shell find ./ -maxdepth 5 -type d )
 
 INCLUDE_DIRS := $(DIRS)
 INCLUDE_DIRS += $(shell find ../rv1106_sdk/include -maxdepth 2 -type d )
-INCLUDE_DIRS += ../common
+INCLUDE_DIRS += $(shell find ../common -maxdepth 2 -type d )
+
+VPATH := $(shell find ../common -maxdepth 2 -type d )
+
+include config.mk
+include ../common/Makefile
+
+ifdef CONFIG_ENABLE_ROCKCHIP_YOLOV5
+include ../common/yolov5/Makefile
+endif
 
 INCLUDE	:= $(patsubst %, -I %, $(INCLUDE_DIRS))
 
@@ -30,11 +39,15 @@ CFLAGS  := -Wall -Wfatal-errors -Os -g -Wl,--gc-sections -fno-common -lstdc++ $(
 CXXFLAGS:= $(CFLAGS)
 
 LIBS += -L ../rv1106_sdk/lib
-LIBS += -lrockit_full -lrockchip_mpp -ldrm -lrga -lrkaiq -lrtsp -lrockiva
+LIBS += -lrockit_full -lrockchip_mpp -ldrm -lrga -lrkaiq -lrtsp
 
-VPATH := ../common/
-include config.mk
-include ../common/Makefile
+ifdef CONFIG_ENABLE_ROCKCHIP_IVA
+LIBS += -lrockiva
+endif
+
+ifdef CONFIG_ENABLE_ROCKCHIP_YOLOV5
+LIBS += -lrknnmrt
+endif
 
 OBJS += $(obj-y)
 

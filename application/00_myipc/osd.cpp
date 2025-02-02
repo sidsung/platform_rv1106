@@ -28,6 +28,10 @@
 #include "rv1106_iva.h"
 #endif
 
+#if CONFIG_ENABLE_ROCKCHIP_YOLOV5
+#include "rv1106_yolov5.h"
+#endif
+
 static graphics_image_t g_graphics_image = {0};
 
 static char *get_time_str(void)
@@ -75,6 +79,10 @@ static int update_osd_draw_smart_detect(VIDEO_FRAME_INFO_S *stViFrame)
 
 #if CONFIG_ENABLE_ROCKCHIP_IVA
     s32Ret = rv1106_iva_get_result(&detect_obj_list);
+#endif
+
+#if CONFIG_ENABLE_ROCKCHIP_YOLOV5
+    s32Ret = rv1106_yolov5_get_result(&detect_obj_list);
 #endif
 
     if (detect_obj_list.object_number) {

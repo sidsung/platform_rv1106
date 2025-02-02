@@ -13,13 +13,23 @@
 #include "rv1106_iva.h"
 #endif
 
-#include "init_param.h"
-
 static rv1106_video_init_param_t g_video_param_list_ctx;
 
 int g_sensor_raw_width = 1920;
 int g_sensor_raw_height = 1080;
 int g_sensor_raw_fps = 20;
+
+#if CONFIG_ENABLE_ROCKCHIP_YOLOV5
+#include "rv1106_yolov5.h"
+
+static yolov5_init_param_t g_yolov5_param = { 0 };
+
+yolov5_init_param_t *get_yolov5_param(void)
+{
+    return &g_yolov5_param;
+}
+
+#endif
 
 #if CONFIG_ENABLE_ROCKCHIP_IVA
 static video_iva_param_t g_iva_param = { 0 };
@@ -110,6 +120,24 @@ void init_video_param_list(void)
     // vi_chn[0].cropX = (g_sensor_raw_width - vi_chn[0].cropW) / 2;
     // vi_chn[0].cropY = (g_sensor_raw_height - vi_chn[0].cropH) / 2;
 
+#if CONFIG_ENABLE_ROCKCHIP_YOLOV5
+    vi_chn[1].enable = 1;
+    vi_chn[1].ViPipe = 0;
+    vi_chn[1].viChnId = 1;
+    vi_chn[1].width = 640;
+    vi_chn[1].height = 640;
+    vi_chn[1].SrcFrameRate = g_sensor_raw_fps;
+    vi_chn[1].DstFrameRate = 10;
+    vi_chn[1].PixelFormat = RK_FMT_YUV420SP;
+    vi_chn[1].bMirror = RK_FALSE;
+    vi_chn[1].bFlip = RK_FALSE;
+    vi_chn[1].bufCount = 2;
+    vi_chn[1].Depth = 1;
+
+    g_yolov5_param.model_path = "/oem/rknn_model/yolov5.rknn";
+    g_yolov5_param.labels_file = "/oem/rknn_model/coco_80_labels_list.txt";
+#endif
+
 #if CONFIG_ENABLE_ROCKCHIP_IVA
     vi_chn[1].enable = 1;
     vi_chn[1].ViPipe = 0;
@@ -129,6 +157,13 @@ void init_video_param_list(void)
     // vi_chn[1].cropW = vi_chn[1].cropH * vi_chn[0].width / vi_chn[0].height;
     // vi_chn[1].cropX = (g_sensor_raw_width - vi_chn[1].cropW) / 2;
     // vi_chn[1].cropY = (g_sensor_raw_height - vi_chn[1].cropH) / 2;
+
+    g_iva_param.enable = 1;
+    g_iva_param.models_path = "/oem/rockiva_data/";
+    g_iva_param.width = 576;
+    g_iva_param.height = 324;
+    g_iva_param.IvaPixelFormat = ROCKIVA_IMAGE_FORMAT_YUV420SP_NV12;
+
 #endif
 
     vpss[0].enable = 1;
@@ -214,14 +249,6 @@ void init_video_param_list(void)
     rgn[0].overlay.format = RK_FMT_BGRA5551;
     rgn[0].overlay.u32FgAlpha = 255;
     rgn[0].overlay.u32BgAlpha = 0;
-
-#if CONFIG_ENABLE_ROCKCHIP_IVA
-    g_iva_param.enable = 1;
-    g_iva_param.models_path = "/oem/rockiva_data/";
-    g_iva_param.width = 576;
-    g_iva_param.height = 324;
-    g_iva_param.IvaPixelFormat = ROCKIVA_IMAGE_FORMAT_YUV420SP_NV12;
-#endif
 
 #if 0
     int i, j;

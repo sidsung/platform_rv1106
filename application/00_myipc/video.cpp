@@ -34,6 +34,10 @@
 #include "rv1106_iva.h"
 #endif
 
+#if CONFIG_ENABLE_ROCKCHIP_YOLOV5
+#include "rv1106_yolov5.h"
+#endif
+
 #if CONFIG_ENABLE_SCREEN_PANEL
 #include "screen_panel_driver.h"
 #endif
@@ -48,18 +52,26 @@ pthread_t g_video_main_thread_id;
 pthread_t g_video_sub_thread_id;
 pthread_t g_video_third_thread_id;
 
+pthread_t g_video_rknn_push_thread_id;
+
 static int g_video_capture_thread_run = 1;
 
-#if CONFIG_ENABLE_ROCKCHIP_IVA
-static void *iva_push_frame_thread(void *pArgs)
+static void *rknn_push_frame_thread(void *pArgs)
 {
     int s32Ret = -1;
-    video_iva_param_t *iva = get_iva_param();
     video_vi_chn_param_t *vi_chn = get_vi_chn_param();
-
     VIDEO_FRAME_INFO_S stViFrame;
 
+    rga_buffer_handle_t src_handle;
+
+#if CONFIG_ENABLE_ROCKCHIP_IVA
+    video_iva_param_t *iva = get_iva_param();
     RockIvaImage image = {0};
+
+#elif CONFIG_ENABLE_ROCKCHIP_YOLOV5
+    yolov5_init_param_t *yolov5 = get_yolov5_param();
+
+#endif
 
     // // 设置线程为可取消的
     // pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
@@ -71,7 +83,8 @@ static void *iva_push_frame_thread(void *pArgs)
     printf("[%s %d] Start iva push stream thread......\n", __FILE__, __LINE__);
 
     vi_chn = &vi_chn[1];
-    while (iva->push_thread_run) {
+    while (g_video_capture_thread_run) {
+        src_handle = 0;
         do {
             s32Ret = RK_MPI_VI_GetChnFrame(vi_chn->ViPipe, vi_chn->viChnId, &stViFrame, 1000);
             if (s32Ret != RK_SUCCESS) {
@@ -81,6 +94,10 @@ static void *iva_push_frame_thread(void *pArgs)
 
             int mpi_src_fd = RK_MPI_MB_Handle2Fd(stViFrame.stVFrame.pMbBlk);
 
+            src_handle = importbuffer_fd(mpi_src_fd, stViFrame.stVFrame.u64PrivateData);
+            rga_buffer_t src_rga_buffer = wrapbuffer_handle(src_handle, stViFrame.stVFrame.u32Width, stViFrame.stVFrame.u32Height, RK_FORMAT_YCbCr_420_SP);
+
+#if CONFIG_ENABLE_ROCKCHIP_IVA
             image.channelId = 0;
             image.dataFd = mpi_src_fd;
             image.frameId = stViFrame.stVFrame.u32TimeRef;
@@ -94,19 +111,28 @@ static void *iva_push_frame_thread(void *pArgs)
             s32Ret = ROCKIVA_PushFrame(iva->handle, &image, NULL);
             if (s32Ret != ROCKIVA_RET_SUCCESS) {
                 printf("[%s %d] ROCKIVA_PushFrame error: ret:%d\n", __func__, __LINE__, s32Ret);
-                break;
+                // break;
             }
-
+#elif CONFIG_ENABLE_ROCKCHIP_YOLOV5
+            s32Ret = rv1106_yolov5_inference(yolov5, src_rga_buffer, stViFrame.stVFrame.u32TimeRef);
+            if (s32Ret != ROCKIVA_RET_SUCCESS) {
+                printf("[%s %d] rv1106_yolov5_inference error: ret:%d\n", __func__, __LINE__, s32Ret);
+                // break;
+            }
+#endif
             // static uint64_t last_timestamp = 0;
             // printf("iva ---> seq:%d w:%d h:%d fmt:%d size:%lld delay:%dms fps:%.1f\n", stViFrame.stVFrame.u32TimeRef, stViFrame.stVFrame.u32Width, stViFrame.stVFrame.u32Height, stViFrame.stVFrame.enPixelFormat, stViFrame.stVFrame.u64PrivateData, (uint32_t)(stViFrame.stVFrame.u64PTS - last_timestamp) / 1000, (1000.0 / ((stViFrame.stVFrame.u64PTS - last_timestamp) / 1000)));
             // last_timestamp = stViFrame.stVFrame.u64PTS;
 
-            s32Ret = RK_MPI_VI_ReleaseChnFrame(vi_chn->ViPipe, vi_chn->viChnId, &stViFrame);
-            if (s32Ret != RK_SUCCESS) {
-                printf("error: RK_MPI_VI_ReleaseChnFrame fail chn:%d 0x%X\n", vi_chn->viChnId, s32Ret);
-            }
-
         } while (0);
+
+        if (src_handle)
+            releasebuffer_handle(src_handle);
+
+        s32Ret = RK_MPI_VI_ReleaseChnFrame(vi_chn->ViPipe, vi_chn->viChnId, &stViFrame);
+        if (s32Ret != RK_SUCCESS) {
+            printf("error: RK_MPI_VI_ReleaseChnFrame fail chn:%d 0x%X\n", vi_chn->viChnId, s32Ret);
+        }
     }
 
     // 移除清理函数
@@ -114,7 +140,6 @@ static void *iva_push_frame_thread(void *pArgs)
 
     return RK_NULL;
 }
-#endif
 
 static void *video_main_thread(void *pArgs)
 {
@@ -277,14 +302,24 @@ int video_init(void)
 #if CONFIG_ENABLE_ROCKCHIP_IVA
     video_iva_param_t *iva = get_iva_param();
     if (iva->enable) {
-        iva->push_thread_run = true;
+        g_video_capture_thread_run = true;
         s32Ret = rv1106_iva_init(iva);
         if (s32Ret != RK_SUCCESS) {
             printf("[%s %d] error: rv1106_iva_init s32Ret:0x%X\n", __func__, __LINE__, s32Ret);
             return s32Ret;
         }
-        pthread_create(&iva->push_thread_id, 0, iva_push_frame_thread, NULL);
+        pthread_create(&g_video_rknn_push_thread_id, 0, rknn_push_frame_thread, NULL);
     }
+#elif CONFIG_ENABLE_ROCKCHIP_YOLOV5
+    yolov5_init_param_t *yolov5 = get_yolov5_param();
+
+    s32Ret = rv1106_yolov5_init(yolov5);
+    if (s32Ret != RK_SUCCESS) {
+        printf("[%s %d] error: rv1106_yolov5_init s32Ret:0x%X\n", __func__, __LINE__, s32Ret);
+        return s32Ret;
+    }
+
+    pthread_create(&g_video_rknn_push_thread_id, 0, rknn_push_frame_thread, NULL);
 #endif
 
     pthread_create(&g_video_main_thread_id, 0, video_main_thread, NULL);
@@ -318,10 +353,14 @@ int video_deinit(void)
         pthread_join(g_video_third_thread_id, NULL);
     }
 
+    if (g_video_rknn_push_thread_id) {
+        printf("[%s %d] wait rknn push thread join\n", __FILE__, __LINE__);
+        pthread_join(g_video_rknn_push_thread_id, NULL);
+    }
+
 #if CONFIG_ENABLE_ROCKCHIP_IVA
     video_iva_param_t *iva = get_iva_param();
     if (iva->enable) {
-        iva->push_thread_run = false;
         if (iva->push_thread_id) {
             printf("[%s %d] wait iva thread joid\n", __FILE__, __LINE__);
             // pthread_cancel(iva.push_thread_id);
@@ -336,6 +375,16 @@ int video_deinit(void)
         }
         printf("rv1106_iva_deinit OK\n");
     }
+#elif CONFIG_ENABLE_ROCKCHIP_YOLOV5
+    yolov5_init_param_t *yolov5 = get_yolov5_param();
+
+    s32Ret = rv1106_yolov5_deinit(yolov5);
+    if (s32Ret != RK_SUCCESS) {
+        printf("[%s %d] error: rv1106_yolov5_deinit s32Ret:0x%X\n", __func__, __LINE__, s32Ret);
+        return s32Ret;
+    }
+
+    printf("rv1106_yolov5_deinit OK\n");
 #endif
 
     rv1106_video_init_param_t *video_param = get_video_param_list();

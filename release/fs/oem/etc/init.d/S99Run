@@ -6,7 +6,7 @@ _DIR=`dirname $cmd`
 
 case $1 in
     start)
-        [ "${RUN_IPC_PROCESS}" = "1" ] && /oem/bin/00_myipc &
+        [ "${RUN_IPC_PROCESS}" = "1" ] && /oem/bin/00_myipc > /disk/ipc.log &
         ;;
     stop)
         sync

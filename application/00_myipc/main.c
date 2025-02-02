@@ -35,7 +35,7 @@ static bool thread_run = true;
 
 static pthread_t g_system_monitor_thread_id = 0;
 
-#if ENABLE_SCREEN_PANEL
+#if CONFIG_ENABLE_SCREEN_PANEL
 static screen_panel_param_t sp_param = {
     .fb_dev_name = "/dev/fb0",
 };
@@ -103,7 +103,7 @@ static void *system_monitor_thread(void *pArgs)
     return RK_NULL;
 }
 
-#if ENABLE_RTSP_PUSH
+#if CONFIG_ENABLE_RTSP_PUSH
 static pthread_t g_rtsp_stream_thread_id = 0;
 static void *rtsp_push_stream_thread(void *pArgs)
 {
@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
     signal(SIGINT, sigterm_handler);
     signal(SIGTERM, sigterm_handler);
 
-#if ENABLE_SCREEN_PANEL
+#if CONFIG_ENABLE_SCREEN_PANEL
     if (screen_panel_init(&sp_param)) {
         printf("ERROR: screen_panel_init faile, exit\n");
         return -1;
@@ -187,7 +187,7 @@ int main(int argc, char *argv[])
 
         pthread_create(&g_system_monitor_thread_id, 0, system_monitor_thread, NULL);
 
-#if ENABLE_RTSP_PUSH
+#if CONFIG_ENABLE_RTSP_PUSH
         pthread_create(&g_rtsp_stream_thread_id, 0, rtsp_push_stream_thread, NULL);
 #endif
 
@@ -202,7 +202,7 @@ int main(int argc, char *argv[])
             pthread_join(g_system_monitor_thread_id, NULL);
         }
 
-#if ENABLE_RTSP_PUSH
+#if CONFIG_ENABLE_RTSP_PUSH
         if (g_rtsp_stream_thread_id) {
             printf("[%s %d] wait rtsp thread join\n", __FILE__, __LINE__);
             pthread_join(g_rtsp_stream_thread_id, NULL);
@@ -215,7 +215,7 @@ int main(int argc, char *argv[])
     printf("[%s %d] video_deinit \n", __FILE__, __LINE__);
     video_deinit();
 
-#if ENABLE_SCREEN_PANEL
+#if CONFIG_ENABLE_SCREEN_PANEL
     screen_panel_deinit(&sp_param);
 #endif
 

@@ -14,23 +14,29 @@ OBJCOPY	= $(CROSS_COMPILE)objcopy
 OBJDUMP	= $(CROSS_COMPILE)objdump
 
 DIRS := $(shell find ./ -maxdepth 5 -type d )
-DIRS += $(shell find ../common -maxdepth 5 -type d )
 
 INCLUDE_DIRS := $(DIRS)
 INCLUDE_DIRS += $(shell find ../rv1106_sdk/include -maxdepth 2 -type d )
+INCLUDE_DIRS += ../common
 
 INCLUDE	:= $(patsubst %, -I %, $(INCLUDE_DIRS))
 
 SOURCE := $(foreach dir,$(DIRS),$(wildcard $(dir)/*.c))
 SOURCE += $(foreach dir,$(DIRS),$(wildcard $(dir)/*.cpp))
 
-OBJS 	:= $(patsubst %.c,%.o,$(patsubst %.cpp,%.o,$(SOURCE)))
+OBJS	:= $(patsubst %.c,%.o,$(patsubst %.cpp,%.o,$(SOURCE)))
 
 CFLAGS  := -Wall -Wfatal-errors -Os -g -Wl,--gc-sections -fno-common -lstdc++ $(INCLUDE)
 CXXFLAGS:= $(CFLAGS)
 
 LIBS += -L ../rv1106_sdk/lib
 LIBS += -lrockit_full -lrockchip_mpp -ldrm -lrga -lrkaiq -lrtsp -lrockiva
+
+VPATH := ../common/
+include config.mk
+include ../common/Makefile
+
+OBJS += $(obj-y)
 
 # $(info $(DIRS))
 # $(info $(SOURCE))
@@ -40,14 +46,16 @@ TARGET := $(notdir $(shell pwd))
 
 .PHONY : everything objs clean distclean rebuild
 
-everything : $(TARGET)
+everything : mk_config $(TARGET)
 	$(STRIP) $(TARGET)
 	# sshpass -p ' ' scp -P 30012 $(TARGET) root@jsfree.top:/userdata
 	# sshpass -p ' ' scp -P 22 $(TARGET) root@192.168.1.21:/userdata
 
-all : $(TARGET)
+mk_config :
+	@./convert_to_header.sh config.mk
 
-objs : $(OBJS)
+objs :
+	@echo $(obj-y)
 
 rebuild: distclean everything
 
@@ -57,9 +65,10 @@ clean :
 	@rm -rf *.so
 	@rm -rf *.o
 	@rm -rf $(OBJS)
+	@rm -rf function_config.h
 
 distclean : clean
 	@rm -rf $(TARGET)
 
 $(TARGET) : $(OBJS)
-	$(CC) $(CXXFLAGS) -o $@  $(OBJS) $(LDFLAGS) $(LIBS)
+	$(CC) $(CXXFLAGS) -o $@ $(OBJS) $(LDFLAGS) $(LIBS)

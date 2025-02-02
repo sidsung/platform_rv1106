@@ -24,7 +24,7 @@
 #include "main.h"
 #include "rv1106_video_init.h"
 
-#if ENABLE_ROCKCHIP_IVA
+#if CONFIG_ENABLE_ROCKCHIP_IVA
 #include "rv1106_iva.h"
 #endif
 
@@ -73,7 +73,7 @@ static int update_osd_draw_smart_detect(VIDEO_FRAME_INFO_S *stViFrame)
     int s32Ret = 0;
     smart_detect_result_obj_item_t detect_obj_list = {0};
 
-#if ENABLE_ROCKCHIP_IVA
+#if CONFIG_ENABLE_ROCKCHIP_IVA
     s32Ret = rv1106_iva_get_result(&detect_obj_list);
 #endif
 

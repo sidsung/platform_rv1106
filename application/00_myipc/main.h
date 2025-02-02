@@ -5,9 +5,7 @@
 extern "C" {
 #endif
 
-#define ENABLE_RTSP_PUSH       1
-#define ENABLE_SCREEN_PANEL    1
-#define ENABLE_ROCKCHIP_IVA    1
+#include "function_config.h"
 
 typedef struct {
     int cpu_usage;

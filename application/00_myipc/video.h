@@ -16,7 +16,7 @@ int video_init(void);
 int video_deinit(void);
 int video_GetFrame(get_frame_type_t type, frameInfo_vi_t *fvi_info, void *arg);
 
-#if ENABLE_SCREEN_PANEL
+#if CONFIG_ENABLE_SCREEN_PANEL
 screen_panel_param_t *get_screen_panel_param(void);
 #endif
 

@@ -9,7 +9,7 @@
 
 #include "rv1106_video_init.h"
 
-#if ENABLE_ROCKCHIP_IVA
+#if CONFIG_ENABLE_ROCKCHIP_IVA
 #include "rv1106_iva.h"
 #endif
 
@@ -21,7 +21,7 @@ int g_sensor_raw_width = 1920;
 int g_sensor_raw_height = 1080;
 int g_sensor_raw_fps = 20;
 
-#if ENABLE_ROCKCHIP_IVA
+#if CONFIG_ENABLE_ROCKCHIP_IVA
 static video_iva_param_t g_iva_param = { 0 };
 
 video_iva_param_t *get_iva_param(void)
@@ -110,7 +110,7 @@ void init_video_param_list(void)
     // vi_chn[0].cropX = (g_sensor_raw_width - vi_chn[0].cropW) / 2;
     // vi_chn[0].cropY = (g_sensor_raw_height - vi_chn[0].cropH) / 2;
 
-#if ENABLE_ROCKCHIP_IVA
+#if CONFIG_ENABLE_ROCKCHIP_IVA
     vi_chn[1].enable = 1;
     vi_chn[1].ViPipe = 0;
     vi_chn[1].viChnId = 1;
@@ -140,7 +140,7 @@ void init_video_param_list(void)
     vpss[0].bindSrcChn.s32DevId = 0;
     vpss[0].bindSrcChn.s32ChnId = 0;
 
-#if ENABLE_SCREEN_PANEL
+#if CONFIG_ENABLE_SCREEN_PANEL
     vpss[0].chn[0].enable = 1;
     vpss[0].chn[0].VpssChnID = 0;
     vpss[0].chn[0].outWidth = 800;
@@ -215,7 +215,7 @@ void init_video_param_list(void)
     rgn[0].overlay.u32FgAlpha = 255;
     rgn[0].overlay.u32BgAlpha = 0;
 
-#if ENABLE_ROCKCHIP_IVA
+#if CONFIG_ENABLE_ROCKCHIP_IVA
     g_iva_param.enable = 1;
     g_iva_param.models_path = "/oem/rockiva_data/";
     g_iva_param.width = 576;

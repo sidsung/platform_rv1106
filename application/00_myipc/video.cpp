@@ -30,11 +30,11 @@
 
 #include "dma_alloc.h"
 
-#if ENABLE_ROCKCHIP_IVA
+#if CONFIG_ENABLE_ROCKCHIP_IVA
 #include "rv1106_iva.h"
 #endif
 
-#if ENABLE_SCREEN_PANEL
+#if CONFIG_ENABLE_SCREEN_PANEL
 #include "screen_panel_driver.h"
 #endif
 
@@ -50,7 +50,7 @@ pthread_t g_video_third_thread_id;
 
 static int g_video_capture_thread_run = 1;
 
-#if ENABLE_ROCKCHIP_IVA
+#if CONFIG_ENABLE_ROCKCHIP_IVA
 static void *iva_push_frame_thread(void *pArgs)
 {
     int s32Ret = -1;
@@ -173,7 +173,7 @@ static void *video_main_thread(void *pArgs)
     return RK_NULL;
 }
 
-#if ENABLE_SCREEN_PANEL
+#if CONFIG_ENABLE_SCREEN_PANEL
 static void *video_third_thread(void *pArgs)
 {
     int s32Ret = -1;
@@ -274,7 +274,7 @@ int video_init(void)
         return s32Ret;
     }
 
-#if ENABLE_ROCKCHIP_IVA
+#if CONFIG_ENABLE_ROCKCHIP_IVA
     video_iva_param_t *iva = get_iva_param();
     if (iva->enable) {
         iva->push_thread_run = true;
@@ -290,7 +290,7 @@ int video_init(void)
     pthread_create(&g_video_main_thread_id, 0, video_main_thread, NULL);
     // pthread_create(&g_video_sub_thread_id, 0, video_sub_thread, NULL);
 
-#if ENABLE_SCREEN_PANEL
+#if CONFIG_ENABLE_SCREEN_PANEL
     pthread_create(&g_video_third_thread_id, 0, video_third_thread, NULL);
 #endif
 
@@ -318,7 +318,7 @@ int video_deinit(void)
         pthread_join(g_video_third_thread_id, NULL);
     }
 
-#if ENABLE_ROCKCHIP_IVA
+#if CONFIG_ENABLE_ROCKCHIP_IVA
     video_iva_param_t *iva = get_iva_param();
     if (iva->enable) {
         iva->push_thread_run = false;

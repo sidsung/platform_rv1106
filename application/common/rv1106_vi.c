@@ -102,6 +102,22 @@ int rv1106_vi_chn_init(video_vi_chn_param_t *vi_chn)
         return ret;
     }
 
+    if (vi_chn->Crop) {
+        VI_CROP_INFO_S stCropInfo;
+        stCropInfo.bEnable = true;
+        stCropInfo.enCropCoordinate = VPSS_CROP_RATIO_COOR;
+        stCropInfo.stCropRect.s32X = vi_chn->cropX;
+        stCropInfo.stCropRect.s32Y = vi_chn->cropY;
+        stCropInfo.stCropRect.u32Width = vi_chn->cropW * 1000 / vi_chn->width;
+        stCropInfo.stCropRect.u32Height = vi_chn->cropH * 1000 / vi_chn->height;
+
+        ret = RK_MPI_VI_SetEptz(vi_chn->ViPipe, vi_chn->viChnId, stCropInfo);
+        if (ret != RK_SUCCESS) {
+            printf("[%s %d] error: create VI error! ret=%#X\n", __func__, __LINE__, ret);
+            return ret;
+        }
+    }
+
     return ret;
 }
 
@@ -146,6 +162,11 @@ int rv1106_vichn_GetStream(video_vi_chn_param_t *vi_chn, frameInfo_vi_t *Fvi_inf
 
     if (vi_chn->enable == 0) {
         printf("error: vi_chn not enable, chn:%d\n", vi_chn->viChnId);
+        return s32Ret;
+    }
+
+    if (Fvi_info == NULL) {
+        printf("error: Fvi_info is NULL\n");
         return s32Ret;
     }
 

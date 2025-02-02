@@ -12,8 +12,5 @@ video_vpss_param_t *get_vpss_param(void);
 video_venc_param_t *get_venc_param(void);
 video_rgn_param_t *get_rgn_param(void);
 
-#if ENABLE_ROCKCHIP_IVA
-video_iva_param_t *get_iva_param(void);
-#endif
 
 #endif

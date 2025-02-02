@@ -102,8 +102,8 @@ void init_video_param_list(void)
     g_video_param_list_ctx.vi_chn[2].PixelFormat = RK_FMT_YUV420SP;
     g_video_param_list_ctx.vi_chn[2].bMirror = RK_FALSE;
     g_video_param_list_ctx.vi_chn[2].bFlip = RK_FALSE;
-    g_video_param_list_ctx.vi_chn[1].bufCount = 3;
-    g_video_param_list_ctx.vi_chn[1].Depth = 1;
+    g_video_param_list_ctx.vi_chn[2].bufCount = 3;
+    g_video_param_list_ctx.vi_chn[2].Depth = 1;
 
     g_video_param_list_ctx.vpss[0].enable = 0;
     g_video_param_list_ctx.vpss[0].VpssGrpID = 0;

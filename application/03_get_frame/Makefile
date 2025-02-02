@@ -2,6 +2,7 @@ CROSS_COMPILE := arm-rockchip830-linux-uclibcgnueabihf-
 
 CC		= $(CROSS_COMPILE)gcc
 CPP		= $(CROSS_COMPILE)g++
+CXX		= $(CROSS_COMPILE)g++
 AR		= $(CROSS_COMPILE)ar
 RANLIB	= $(CROSS_COMPILE)ranlib
 
@@ -21,10 +22,11 @@ INCLUDE_DIRS += $(shell find ../rv1106_sdk/include -maxdepth 2 -type d )
 INCLUDE	:= $(patsubst %, -I %, $(INCLUDE_DIRS))
 
 SOURCE := $(foreach dir,$(DIRS),$(wildcard $(dir)/*.c))
+SOURCE += $(foreach dir,$(DIRS),$(wildcard $(dir)/*.cpp))
 
 OBJS 	:= $(patsubst %.c,%.o,$(patsubst %.cpp,%.o,$(SOURCE)))
 
-CFLAGS  := -Wall -Wfatal-errors -Os -Wl,--gc-sections -fno-common $(INCLUDE)
+CFLAGS  := -Wall -Wfatal-errors -Os -g -Wl,--gc-sections -fno-common -lstdc++ $(INCLUDE)
 CXXFLAGS:= $(CFLAGS)
 
 LIBS += -L ../rv1106_sdk/lib
@@ -40,7 +42,8 @@ TARGET := $(notdir $(shell pwd))
 
 everything : $(TARGET)
 	$(STRIP) $(TARGET)
-	cp $(TARGET) /tftp
+	# sshpass -p ' ' scp -P 30012 $(TARGET) root@jsfree.top:/userdata
+	# sshpass -p ' ' scp -P 22 $(TARGET) root@192.168.1.21:/userdata
 
 all : $(TARGET)
 
@@ -57,7 +60,6 @@ clean :
 
 distclean : clean
 	@rm -rf $(TARGET)
-	@rm -rf /tftp/$(TARGET)
 
 $(TARGET) : $(OBJS)
 	$(CC) $(CXXFLAGS) -o $@  $(OBJS) $(LDFLAGS) $(LIBS)

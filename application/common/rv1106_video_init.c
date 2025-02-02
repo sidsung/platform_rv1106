@@ -24,7 +24,6 @@ extern "C" {
 #include <errno.h>
 #include <pthread.h>
 #include <sys/poll.h>
-#include <semaphore.h>
 
 #include "rv1106_video_init.h"
 
@@ -113,14 +112,6 @@ int rv1106_video_init(rv1106_video_init_param_t *video_param)
         }
         if (s32Ret) break;
 
-        if (video_param->iva[0].enable) {
-            s32Ret = rv1106_iva_init(&video_param->iva[0]);
-            if (s32Ret != RK_SUCCESS) {
-                printf("[%s %d] error: rv1106_iva_init s32Ret:0x%X\n", __func__, __LINE__, s32Ret);
-                break;
-            }
-        }
-
         printf("%s initial finish\n", __func__);
         s32Ret = 0;
     } while (0);
@@ -136,16 +127,6 @@ int rv1106_video_deinit(rv1106_video_init_param_t *video_param)
 {
     int i;
     RK_S32 s32Ret = RK_FAILURE;
-
-    if (video_param->iva[0].enable) {
-        printf(">>> rv1106_iva_deinit index:%d \n", 0);
-        s32Ret = rv1106_iva_deinit(&video_param->iva[0]);
-        if (s32Ret != RK_SUCCESS) {
-            printf("[%s %d] error: rv1106_iva_deinit s32Ret:0x%X\n", __func__, __LINE__, s32Ret);
-            return s32Ret;
-        }
-        printf("rv1106_iva_deinit OK\n");
-    }
 
     for (i = 0; i < sizeof(video_param->rgn) / sizeof(video_rgn_param_t); i++) {
         if (video_param->rgn[i].enable) {

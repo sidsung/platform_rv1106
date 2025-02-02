@@ -25,8 +25,10 @@ typedef struct {
     RK_U32 Depth;
 
     RK_BOOL Crop;
-    int X;
-    int Y;
+    int cropX;
+    int cropY;
+    int cropW;
+    int cropH;
 } video_vpss_chn_param_t;
 
 typedef struct {

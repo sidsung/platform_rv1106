@@ -354,10 +354,6 @@
 	pinctrl-0 = <&i2c3m1_xfer &i2c3m0_xfer>;
 };
 
-// &i2c4 {
-//  pinctrl-0 = <&i2c4m0_xfer>;
-// };
-
 /**********UART**********/
 &uart0 {
 	pinctrl-0 = <&uart0m0_xfer &uart0m1_xfer>;
@@ -475,6 +471,10 @@
 	status = "disabled";
 };
 
+&rmii_phy {
+	bgs,increment = <0>;
+};
+
 /**********USB**********/
 &u2phy {
 	status = "okay";
@@ -532,10 +532,6 @@
 
 &rkvenc_pp {
 	status = "okay";
-};
-
-&rmii_phy {
-	bgs,increment = <0>;
 };
 
 &rng {

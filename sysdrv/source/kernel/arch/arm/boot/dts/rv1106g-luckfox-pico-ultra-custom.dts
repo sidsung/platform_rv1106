@@ -5,7 +5,6 @@
 
 /dts-v1/;
 #include "rv1106.dtsi"
-#include "rv1106-evb.dtsi"
 #include <dt-bindings/input/input.h>
 #include <dt-bindings/display/media-bus-format.h>
 
@@ -178,6 +177,10 @@
 		regulator-boot-on;
 	};
 
+	restart-poweroff {
+		compatible = "restart-poweroff";
+	};
+
 	leds: leds {
 		compatible = "gpio-leds";
 		work_led: work{
@@ -186,6 +189,29 @@
 			default-state = "on";
 		};
 	};
+
+/*
+	adc-keys {
+		compatible = "adc-keys";
+		io-channels = <&saradc 0>;
+		io-channel-names = "buttons";
+		poll-interval = <100>;
+		keyup-threshold-microvolt = <1800000>;
+
+		key_volumeup-key {
+			label = "key_volumeup";
+			linux,code = <KEY_VOLUMEUP>;
+			press-threshold-microvolt = <0>;
+		};
+
+		key_volumedown-key {
+			label = "key_volumedown";
+			linux,code = <KEY_VOLUMEDOWN>;
+			press-threshold-microvolt = <400781>;
+		};
+	};
+*/
+
 };
 
 /***************************** audio ********************************/
@@ -556,11 +582,51 @@
 };
 
 /**********ETH**********/
+&rmii_phy {
+	bgs,increment = <0>;
+};
+
 &gmac {
 	status = "okay";
 };
 
 /**********RTC**********/
 &rtc {
+	status = "okay";
+};
+
+&mpp_srv {
+	status = "okay";
+};
+
+&mpp_vcodec {
+	status = "okay";
+};
+
+&npu {
+	status = "okay";
+};
+
+&rga2 {
+	status = "okay";
+};
+
+&rkdvbm {
+	status = "okay";
+};
+
+&rkvenc {
+	status = "okay";
+};
+
+&rkvenc_pp {
+	status = "okay";
+};
+
+&rng {
+	status = "okay";
+};
+
+&rve {
 	status = "okay";
 };

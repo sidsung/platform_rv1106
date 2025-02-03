@@ -39,7 +39,7 @@ int rv1106_yolov5_get_result(smart_detect_result_obj_item_t *item)
 
         if (item->object_number < SMART_DETECT_ITEM_NUM) {
             item->obj_item[item->object_number].type_index = g_od_results.results[i].cls_id;
-            item->obj_item[item->object_number].score = g_od_results.results[i].prop;
+            item->obj_item[item->object_number].score = g_od_results.results[i].prop * 100;
 
             snprintf(item->obj_item[item->object_number].object_name, sizeof(item->obj_item[item->object_number].object_name), "%s", coco_cls_to_name(g_od_results.results[i].cls_id));
 

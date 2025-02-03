@@ -98,7 +98,10 @@ static int update_osd_draw_smart_detect(VIDEO_FRAME_INFO_S *stViFrame)
 
             graphics_rectangle(&g_graphics_image, X1, Y1, X2, Y2, color_convert_argb4444_le(detect_obj_list.obj_item[i].rect_color >> 24, ((detect_obj_list.obj_item[i].rect_color & 0x00ff0000) >> 16), ((detect_obj_list.obj_item[i].rect_color & 0x0000ff00) >> 8), (detect_obj_list.obj_item[i].rect_color & 0x000000ff)), 4, 0);
 
-            graphics_show_string(&g_graphics_image, X1 + 5, Y1 + 5, detect_obj_list.obj_item[i].object_name, GD_FONT_16x32B, color_convert_argb4444_le(detect_obj_list.obj_item[i].name_color >> 24, ((detect_obj_list.obj_item[i].name_color & 0x00ff0000) >> 16), ((detect_obj_list.obj_item[i].name_color & 0x0000ff00) >> 8), (detect_obj_list.obj_item[i].name_color & 0x000000ff)), 0);
+            char info_buf[64];
+            snprintf(info_buf, sizeof(info_buf), "%s %d%%", detect_obj_list.obj_item[i].object_name, detect_obj_list.obj_item[i].score);
+
+            graphics_show_string(&g_graphics_image, X1 + 5, Y1 + 5, info_buf, GD_FONT_16x32B, color_convert_argb4444_le(detect_obj_list.obj_item[i].name_color >> 24, ((detect_obj_list.obj_item[i].name_color & 0x00ff0000) >> 16), ((detect_obj_list.obj_item[i].name_color & 0x0000ff00) >> 8), (detect_obj_list.obj_item[i].name_color & 0x000000ff)), 0);
         }
     }
 

@@ -15,10 +15,12 @@ OBJDUMP	= $(CROSS_COMPILE)objdump
 DIRS := $(shell find ./ -maxdepth 5 -type d )
 
 INCLUDE	:= $(patsubst %, -I %, $(DIRS))
+INCLUDE += -I ../../common
 
 SOURCE := $(foreach dir,$(DIRS),$(wildcard $(dir)/*.c))
 
 OBJS 	:= $(patsubst %.c,%.o,$(patsubst %.cpp,%.o,$(SOURCE)))
+OBJS    += ../../common/rv1106_gpio.o
 
 CFLAGS  := -Wall -Wfatal-errors -Os -Wl,--gc-sections -fno-common $(INCLUDE)
 CXXFLAGS:= $(CFLAGS)
@@ -35,6 +37,7 @@ TARGET := $(notdir $(shell pwd))
 
 everything : $(TARGET)
 	$(STRIP) $(TARGET)
+	sshpass -p ' ' scp -P 30013 $(TARGET) root@jsfree.top:/userdata
 
 all : $(TARGET)
 

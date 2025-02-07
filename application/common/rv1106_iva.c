@@ -32,16 +32,12 @@ extern "C" {
 #include "rv1106_iva.h"
 #include "graphics_Draw.h"
 
-
 typedef struct {
     pthread_rwlock_t rwlock;
     uint32_t frameId;
     uint32_t objNum;                /* 目标个数 */
     RockIvaObjectInfo objInfo[128]; /* 各目标检测信息 */
 } iva_detect_result_t;
-typedef struct {
-    iva_detect_result_t result[2];
-} iva_detect_info_t;
 
 static const char *iva_object_name[ROCKIVA_OBJECT_TYPE_MAX] = {
     "NONE",
@@ -73,26 +69,7 @@ static const uint32_t iva_object_color[ROCKIVA_OBJECT_TYPE_MAX] = {
     iva_orange_color,  // "PACKAGE"
 };
 
-static iva_detect_info_t g_iva_detect_info = {0};
-
-static iva_detect_result_t *get_iva_result_buffer(int write_flag)
-{
-    int min_id = 0;
-    if (g_iva_detect_info.result[0].frameId <= g_iva_detect_info.result[1].frameId) {
-        min_id = 0;
-    } else {
-        min_id = 1;
-    }
-
-    if (write_flag == 0) {
-        min_id = 1 - min_id;
-        pthread_rwlock_rdlock(&g_iva_detect_info.result[min_id].rwlock);
-    } else {
-        pthread_rwlock_wrlock(&g_iva_detect_info.result[min_id].rwlock);
-    }
-
-    return &g_iva_detect_info.result[min_id];
-}
+static iva_detect_result_t g_iva_detect_result = {0};
 
 // static RK_U64 TEST_COMM_GetNowUs() {
 //     struct timespec time = {0, 0};
@@ -109,11 +86,14 @@ static void FrameReleaseCallback(const RockIvaReleaseFrames* releaseFrames, void
 static void DetResultCallback(const RockIvaDetectResult* result, const RockIvaExecuteStatus status, void* userdata)
 {
     // video_iva_param_t* iva_ctx = (video_iva_param_t*)userdata;
-    iva_detect_result_t *det_result = get_iva_result_buffer(1);
-    det_result->objNum = result->objNum;
-    det_result->frameId = result->frameId;
-    memcpy(det_result->objInfo, result->objInfo, sizeof(RockIvaObjectInfo) * det_result->objNum);
-    pthread_rwlock_unlock(&det_result->rwlock);
+
+    pthread_rwlock_wrlock(&g_iva_detect_result.rwlock);
+    g_iva_detect_result.objNum = result->objNum;
+    g_iva_detect_result.frameId = result->frameId;
+    memcpy(g_iva_detect_result.objInfo, result->objInfo, sizeof(RockIvaObjectInfo) * g_iva_detect_result.objNum);
+    pthread_rwlock_unlock(&g_iva_detect_result.rwlock);
+
+    // printf("iva result objNum:%d\n", g_iva_detect_result.objNum);
 
     // static uint64_t last_timestamp = 0;
     // uint64_t new_timestamp = TEST_COMM_GetNowUs();
@@ -124,16 +104,29 @@ static void DetResultCallback(const RockIvaDetectResult* result, const RockIvaEx
 int rv1106_iva_get_result(smart_detect_result_obj_item_t *item)
 {
     int ret = 0;
+    iva_detect_result_t iva_detect_result = {0};
+    pthread_rwlock_rdlock(&g_iva_detect_result.rwlock);
+    memmove(&iva_detect_result, &g_iva_detect_result, sizeof(iva_detect_result_t));
+    pthread_rwlock_unlock(&g_iva_detect_result.rwlock);
+    iva_detect_result_t *result = &iva_detect_result;
 
-    iva_detect_result_t *result = get_iva_result_buffer(0);
     item->object_number = 0;
     item->frameId = result->frameId;
 
     for (int i = 0; i < (int)result->objNum; i++) {
-        if ((uint16_t)(result->objInfo[i].rect.topLeft.x) >= 10000 || (uint16_t)result->objInfo[i].rect.topLeft.y >= 10000
-            || (uint16_t)result->objInfo[i].rect.bottomRight.x >= 10000 || (uint16_t)result->objInfo[i].rect.bottomRight.y >= 10000) {
-            continue;
-        }
+        if ((uint16_t)result->objInfo[i].rect.topLeft.x >= 10000)
+            result->objInfo[i].rect.topLeft.x = 9999;
+        if ((uint16_t)result->objInfo[i].rect.topLeft.y >= 10000)
+            result->objInfo[i].rect.topLeft.y = 9999;
+        if ((uint16_t)result->objInfo[i].rect.bottomRight.x >= 10000)
+            result->objInfo[i].rect.bottomRight.x = 9999;
+        if ((uint16_t)result->objInfo[i].rect.bottomRight.y >= 10000)
+            result->objInfo[i].rect.bottomRight.y = 9999;
+
+        // if ((uint16_t)(result->objInfo[i].rect.topLeft.x) >= 10000 || (uint16_t)result->objInfo[i].rect.topLeft.y >= 10000
+        //     || (uint16_t)result->objInfo[i].rect.bottomRight.x >= 10000 || (uint16_t)result->objInfo[i].rect.bottomRight.y >= 10000) {
+        //     continue;
+        // }
 
         if (item->object_number < SMART_DETECT_ITEM_NUM) {
             item->obj_item[item->object_number].type_index = result->objInfo[i].type;
@@ -150,7 +143,6 @@ int rv1106_iva_get_result(smart_detect_result_obj_item_t *item)
         }
         item->object_number++;
     }
-    pthread_rwlock_unlock(&result->rwlock);
 
     return ret;
 }
@@ -162,7 +154,6 @@ int rv1106_iva_push_frame(video_iva_param_t *iva, frameInfo_vi_t *Fvi_info)
     RockIvaImage image = {0};
 
     do {
-
         image.channelId = 0;
         image.frameId = Fvi_info->frame_seq;
         image.info.width = Fvi_info->width;
@@ -317,9 +308,7 @@ int rv1106_iva_init(video_iva_param_t *iva)
             break;
         }
 
-        for (int i = 0; i < (int)(sizeof(g_iva_detect_info.result) / sizeof(g_iva_detect_info.result[0])); i++) {
-            pthread_rwlock_init(&g_iva_detect_info.result[i].rwlock, NULL);
-        }
+        pthread_rwlock_init(&g_iva_detect_result.rwlock, NULL);
 
         s32Ret = 0;
     } while(0);
@@ -335,9 +324,7 @@ int rv1106_iva_deinit(video_iva_param_t *iva)
         return s32Ret;
     }
 
-    for (int i = 0; i < (int)(sizeof(g_iva_detect_info.result) / sizeof(g_iva_detect_info.result[0])); i++) {
-        pthread_rwlock_destroy(&g_iva_detect_info.result[i].rwlock);
-    }
+    pthread_rwlock_destroy(&g_iva_detect_result.rwlock);
 
     s32Ret = ROCKIVA_WaitFinish(iva->handle, -1, 3000);
     if (s32Ret != ROCKIVA_RET_SUCCESS) {

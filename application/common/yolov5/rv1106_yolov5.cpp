@@ -29,13 +29,18 @@ int rv1106_yolov5_get_result(smart_detect_result_obj_item_t *item)
     item->frameId = g_od_results.id;
 
     for (int i = 0; i < g_od_results.count; i++) {
-        if (g_od_results.results[i].box.left >= 640
-            || g_od_results.results[i].box.top >= 640
-            || g_od_results.results[i].box.right >= 640
-            || g_od_results.results[i].box.bottom >= 640)
+        if (g_od_results.results[i].box.left > 640
+            || g_od_results.results[i].box.top > 640
+            || g_od_results.results[i].box.right > 640
+            || g_od_results.results[i].box.bottom > 640)
         {
             continue;
         }
+
+        g_od_results.results[i].box.left -= 1;
+        g_od_results.results[i].box.top -= 1;
+        g_od_results.results[i].box.right -= 1;
+        g_od_results.results[i].box.bottom -= 1;
 
         if (item->object_number < SMART_DETECT_ITEM_NUM) {
             item->obj_item[item->object_number].type_index = g_od_results.results[i].cls_id;

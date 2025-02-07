@@ -135,7 +135,7 @@ function build_release() {
 
     build_cpio ${RAMDISK_TMP_SOURCE} ${RAMDISK_IMG}
     # build_erofs ${ROOTFS_TMP_SOURCE} ${ROOTFS_IMG}
-    build_ext4 ${ROOTFS_TMP_SOURCE} ${ROOTFS_IMG} 128M
+    build_ext4 ${ROOTFS_TMP_SOURCE} ${ROOTFS_IMG} 512M
     build_ext4 ${OEM_TMP_SOURCE} ${OEM_IMG} 64M
     build_ext4 ${USERDATA_SOURCE} ${USERDATA_IMG} 64M
 

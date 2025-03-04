@@ -12,6 +12,7 @@ case $1 in
     start)
         /etc/init.d/connect_net.sh &
         enable_coredump
+        /etc/init.d/df.sh &
         [ ! -f /oem/etc/init.d/rcS ] || sh /oem/etc/init.d/rcS
         [ ! -e /dev/fb0 ] || [ ! -f /system/bin/show_ipaddr ] || /system/bin/show_ipaddr &
         ;;

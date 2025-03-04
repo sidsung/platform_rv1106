@@ -25,6 +25,7 @@ extern "C" {
 #include "rk_mpi_vi.h"
 #include "rk_mpi_vo.h"
 #include "rk_mpi_vpss.h"
+#include "rk_mpi_mmz.h"
 
 /*     ROCKIVA   */
 #include "rockiva/rockiva_ba_api.h"

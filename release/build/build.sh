@@ -45,7 +45,7 @@ UBOOT_DEFCONFIG=luckfox_rv1106_pico_ultra_defconfig
 
 PARTITION="32K(env),512K@32K(idblock),256K(uboot),32M(boot),512M(rootfs),512M(oem),512M(userdata),-(disk)"
 ENV_PART_SIZE="0x8000"
-BOOT_ENV="sys_bootargs= root=/dev/mmcblk0p5 rootfstype=erofs ro init=/linuxrc"
+BOOT_ENV="sys_bootargs= root=/dev/mmcblk0p5 rootfstype=ext4 rw init=/linuxrc"
 
 #################################
 
@@ -134,8 +134,8 @@ function build_release() {
     cd -
 
     build_cpio ${RAMDISK_TMP_SOURCE} ${RAMDISK_IMG}
-    build_erofs ${ROOTFS_TMP_SOURCE} ${ROOTFS_IMG}
-    # build_ext4 ${ROOTFS_TMP_SOURCE} ${ROOTFS_IMG} 64M
+    # build_erofs ${ROOTFS_TMP_SOURCE} ${ROOTFS_IMG}
+    build_ext4 ${ROOTFS_TMP_SOURCE} ${ROOTFS_IMG} 512M
     build_ext4 ${OEM_TMP_SOURCE} ${OEM_IMG} 64M
     build_ext4 ${USERDATA_SOURCE} ${USERDATA_IMG} 64M
 

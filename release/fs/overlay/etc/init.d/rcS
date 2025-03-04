@@ -10,8 +10,7 @@ fi
 
 chown root:root /var/empty
 chmod 700 /var/empty
-
-mkdir /tmp/seedrng
+chmod 777 /disk
 
 # Start all init scripts in /etc/init.d
 # executing them in numerical order.
